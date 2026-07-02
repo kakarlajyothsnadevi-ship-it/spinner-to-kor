@@ -1,0 +1,25 @@
+{
+  "_comment": "이 청크는 settings.json 의 hooks.PreToolUse 배열에 머지한다. install.sh가 src/merge-hooks.py 로 무간섭 머지한다(사용자 hook 보존). command 안의 '# spinner-to-kor' 주석은 우리 entry 식별 마커 — 지우지 말 것. 수동 적용 시 hooks.PreToolUse 배열 끝에 아래 객체들을 append.",
+  "PreToolUse": [
+    { "matcher": "Read", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "파일 읽는 중" }] },
+    { "matcher": "Glob", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "파일 검색 중" }] },
+    { "matcher": "Grep", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "코드 검색 중" }] },
+    { "matcher": "Edit|MultiEdit", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "파일 편집 중" }] },
+    { "matcher": "Write", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "파일 작성 중" }] },
+    { "matcher": "NotebookEdit", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "노트북 편집 중" }] },
+    { "matcher": "Bash", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "쉘 명령 실행 중" }] },
+    { "matcher": "Agent", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "서브에이전트 실행 중" }] },
+    { "matcher": "WebFetch", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "웹 페이지 조회 중" }] },
+    { "matcher": "WebSearch", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "웹 검색 중" }] },
+    { "matcher": "TaskCreate|TaskUpdate|TaskList|TaskGet|TaskOutput|TaskStop", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "작업 관리 중" }] },
+    { "matcher": "Skill", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "스킬 실행 중" }] },
+    { "matcher": "ToolSearch", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "도구 스키마 로드 중" }] },
+    { "matcher": "AskUserQuestion", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "사용자 확인 대기" }] },
+    { "matcher": "EnterPlanMode|ExitPlanMode", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "계획 모드 전환 중" }] },
+    { "matcher": "EnterWorktree|ExitWorktree", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "워크트리 전환 중" }] },
+    { "matcher": "CronCreate|CronDelete|CronList", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "예약 작업 관리 중" }] },
+    { "matcher": "ScheduleWakeup", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "예약 깨우기 설정 중" }] },
+    { "matcher": "ListMcpResourcesTool|ReadMcpResourceTool", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "MCP 리소스 조회 중" }] },
+    { "matcher": "mcp__.*", "hooks": [{ "type": "command", "command": "true # spinner-to-kor", "statusMessage": "MCP 도구 호출 중" }] }
+  ]
+}

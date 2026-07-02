@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>dev.codevillain.claude-spinner-patch</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/codevillain/.claude/scripts/auto-patch-claude.sh</string>
+    </array>
+
+    <key>WatchPaths</key>
+    <array>
+        <string>/Users/codevillain/.local/share/claude/versions</string>
+    </array>
+
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/codevillain/.claude/logs/spinner-patch.stdout</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/codevillain/.claude/logs/spinner-patch.stderr</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+        <string>/Users/codevillain</string>
+    </dict>
+</dict>
+</plist>

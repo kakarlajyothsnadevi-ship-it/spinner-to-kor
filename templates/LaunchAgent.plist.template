@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Claude Code 한국어 스피너 자동 재패치 LaunchAgent (배포 템플릿).
+
+  install.sh가 아래 placeholder를 사용자 환경 값으로 치환한 후
+  ~/Library/LaunchAgents/dev.claude-spinner-patch.plist 로 복사한다.
+
+  Placeholders:
+    {{HOME}}             — 사용자 홈 디렉터리 (예: /Users/<user>)
+    {{HOMEBREW_PREFIX}}  — Homebrew prefix (Apple Silicon: /opt/homebrew, Intel: /usr/local)
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>dev.claude-spinner-patch</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>{{HOME}}/.claude/scripts/auto-patch-claude.sh</string>
+    </array>
+
+    <key>WatchPaths</key>
+    <array>
+        <string>{{HOME}}/.local/share/claude/versions</string>
+    </array>
+
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>{{HOME}}/.claude/logs/spinner-patch.stdout</string>
+
+    <key>StandardErrorPath</key>
+    <string>{{HOME}}/.claude/logs/spinner-patch.stderr</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>{{HOMEBREW_PREFIX}}/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+        <string>{{HOME}}</string>
+    </dict>
+</dict>
+</plist>

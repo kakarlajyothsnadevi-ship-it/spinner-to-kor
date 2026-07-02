@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # spinner-to-kor 원격 한 줄 설치·업데이트 부트스트랩.
 #
-#   curl -fsSL https://raw.githubusercontent.com/claude-code-expert/spinner/main/bootstrap.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/claude-code-expert/spinner-to-kor/main/bootstrap.sh | bash
 #
 # 동작:
 #   1) GitHub 최신 release 의 소스 tarball 다운로드 (버전 고정·재현 가능)
@@ -11,10 +11,10 @@
 #
 # 테스트/오프라인:
 #   SPINNER_SOURCE_TARBALL=<로컬 tar.gz>  → release 조회를 건너뛰고 그 파일 사용
-#   SPINNER_REPO=<owner/repo>             → 기본 claude-code-expert/spinner 재지정
+#   SPINNER_REPO=<owner/repo>             → 기본 claude-code-expert/spinner-to-kor 재지정
 set -euo pipefail
 
-REPO="${SPINNER_REPO:-claude-code-expert/spinner}"
+REPO="${SPINNER_REPO:-claude-code-expert/spinner-to-kor}"
 
 err() { printf "\033[31m%s\033[0m\n" "$*" >&2; }
 

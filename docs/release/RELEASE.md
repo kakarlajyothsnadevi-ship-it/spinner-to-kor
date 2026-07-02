@@ -72,7 +72,7 @@ gh release create v2.1.1 \
 
 ```bash
 # 격리 환경(새 컨테이너·계정) 권장. 로컬이면 HOME 위장:
-curl -fsSL https://raw.githubusercontent.com/claude-code-expert/spinner/main/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/claude-code-expert/spinner-to-kor/main/bootstrap.sh | bash
 spinner-to-kor status      # repo/설치본 버전 == 방금 발행한 버전
 spinner-to-kor verify      # 6항목 전부 ✓
 ```
@@ -103,7 +103,7 @@ gh release delete v2.1.1 --yes           # 태그는 유지 (이력 보존)
 gh release edit v2.1.0 --latest
 
 # B. 이미 설치한 사용자는 직전 버전으로 재설치
-SPINNER_REPO=claude-code-expert/spinner spinner-to-kor update   # latest = 되돌린 버전
+SPINNER_REPO=claude-code-expert/spinner-to-kor spinner-to-kor update   # latest = 되돌린 버전
 ```
 
 사용자 측 안전장치는 이미 있다 — 바이너리는 백업에서 `uninstall --restore-bin`, settings.json 은 머지 실패 시 무변경.

@@ -5,7 +5,15 @@
 # 기존 진입점은 그대로 동작한다 — 이 파일은 명령 표면을 하나로 수렴시키는 용도.
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# 심볼릭 링크 해석 — PATH 진입점(~/.local/bin/spinner-to-kor)은 스냅샷을 가리키는
+# 심볼릭이므로, 실제 스크립트가 있는 디렉터리(스냅샷 또는 repo)를 REPO_DIR로 잡는다.
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$SOURCE" ]]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+REPO_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 
 usage() {
   cat <<EOF
@@ -67,7 +75,14 @@ shift
 case "$CMD" in
   install)        exec "$REPO_DIR/install.sh" "$@" ;;
   uninstall)      exec "$REPO_DIR/uninstall.sh" "$@" ;;
-  update)         exec "$REPO_DIR/install.sh" --update "$@" ;;
+  update)
+    # 부트스트랩이 있으면 최신 release 를 받아 재설치(무간섭), 없으면 로컬 재설치
+    if [[ -f "$REPO_DIR/bootstrap.sh" ]]; then
+      exec bash "$REPO_DIR/bootstrap.sh" "$@"
+    else
+      exec "$REPO_DIR/install.sh" --update "$@"
+    fi
+    ;;
   verify)         exec "$REPO_DIR/verify.sh" "$@" ;;
   patch)          exec "$REPO_DIR/src/patch-spinner-verbs.sh" "$@" ;;
   status)         status_cmd ;;

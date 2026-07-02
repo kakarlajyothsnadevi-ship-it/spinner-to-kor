@@ -117,5 +117,16 @@ else
   yel "== 4) 바이너리는 그대로 둡니다. 영문 복귀를 원하면 './uninstall.sh --restore-bin' 사용 =="
 fi
 
+# 5. 배포 스냅샷 + PATH 진입점 제거 (curl 설치 자산)
+bold "== 5) 배포 스냅샷·진입점 제거 =="
+rm -f "$HOME/.local/bin/spinner-to-kor"
+green "✓ 진입점 제거: ~/.local/bin/spinner-to-kor"
+SNAPSHOT="$HOME/.claude/spinner-to-kor"
+# 이 스크립트가 스냅샷 안에서 실행 중이어도 unix는 열린 파일의 inode를 유지하므로 안전
+if [[ -d "$SNAPSHOT" ]]; then
+  rm -rf "$SNAPSHOT"
+  green "✓ 스냅샷 제거: $SNAPSHOT"
+fi
+
 echo
 bold "제거 완료. 새 터미널에서 claude 를 실행해 영문 스피너 복귀 여부를 확인하세요."

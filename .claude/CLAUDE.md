@@ -32,6 +32,7 @@ Claude Code CLI의 스피너 영문 verb 178개("Pondering...", "Schlepping..." 
 | `src/patch-spinner-verbs.sh` | 단일 바이너리 패치 래퍼 (탐지·안내만, 백업은 py 책임) |
 | `src/auto-patch-claude.sh` | LaunchAgent 헬퍼 — versions/ 전체 스캔, mtime 안정화 대기, idempotent |
 | `install.sh` / `uninstall.sh` / `verify.sh` | 설치·무간섭 업데이트(`--update`)·제거·6항목 자가진단 |
+| `bootstrap.sh` | curl 원격 설치 진입점 — GitHub release tarball → install.sh. `SPINNER_SOURCE_TARBALL`/`SPINNER_REPO` env 오버라이드 |
 | `tests/run.sh` | 전체 테스트 (fixture 기반, 실기 격리) — 코드 수정 후 필수 실행 |
 | `templates/LaunchAgent.plist.template` | `{{HOME}}`·`{{HOMEBREW_PREFIX}}` 치환용 배포 템플릿 |
 | `snippets/settings-hooks.json` | settings.json에 머지할 PreToolUse 20개 매처 |

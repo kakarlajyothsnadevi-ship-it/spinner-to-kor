@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.0 — 2026-07-02 (원격 배포)
+
+- **한 줄 설치** (`bootstrap.sh`): `curl -fsSL .../bootstrap.sh | bash` — GitHub 최신 release tarball 을 받아 설치. Node/npm 의존 없음(순수 bash+python3). `SPINNER_REPO`·`SPINNER_SOURCE_TARBALL` env 로 포크·오프라인 지원.
+- **자립 update/uninstall**: install 시 배포 스냅샷을 `~/.claude/spinner-to-kor/` 에 보관하고 `~/.local/bin/spinner-to-kor` PATH 진입점을 심는다. `spinner-to-kor update` = 부트스트랩 재실행(최신 release, 무간섭), `uninstall` = 스냅샷·진입점까지 정리. curl 설치 후 소스 디렉터리 없이도 전 명령 동작.
+- CLI 진입점이 심볼릭 링크를 해석해 실제 스크립트 위치를 REPO_DIR로 잡는다 (`~/.local/bin` 심볼릭 대응).
+- 테스트: `test_bootstrap.sh` 18건 — 로컬 tarball 주입으로 네트워크 없이 설치→update→uninstall 전체 흐름 검증.
+
 ## 2.0.0 — 2026-07-02 (M4 플랫폼 확장)
 
 - **Linux/WSL 지원** (FR-41/42): `src/platform.sh` 신설 — 자동 재패치 등록/해제/상태를 OS별로 캡슐화. macOS는 LaunchAgent(기존), Linux·WSL은 systemd path unit(`~/.config/systemd/user/spinner-patch.path`). 재서명(codesign)은 non-darwin에서 no-op (ELF는 서명 불요). install/uninstall/verify가 공통 라이브러리 소싱.

@@ -90,6 +90,19 @@ en_count() {
   python3 "$REPO_DIR/src/patch-spinner-verbs.py" --check "$1"
 }
 
+# 현재 working tree로 github 스타일 tarball 생성 (prefix 디렉터리 포함).
+# git archive 는 커밋된 것만 담으므로, 미커밋 변경도 포함하도록 staging 복사 후 tar.
+# 사용: make_tarball <출력경로> [prefix]
+make_tarball() {
+  local out="$1" prefix="${2:-spinner-src}"
+  local staging; staging="$(mktemp -d)"
+  mkdir -p "$staging/$prefix"
+  ( cd "$REPO_DIR" && cp -R install.sh uninstall.sh verify.sh spinner-to-kor \
+      bootstrap.sh VERSION src templates snippets "$staging/$prefix/" )
+  tar czf "$out" -C "$staging" "$prefix"
+  rm -rf "$staging"
+}
+
 report() {
   echo
   echo "결과: PASS=$PASS FAIL=$FAIL"

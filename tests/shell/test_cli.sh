@@ -40,10 +40,12 @@ PY
 )"
 if [[ "$PROJ_OURS" -ge 20 ]]; then pass "install --project 위임 + 옵션 투과"; else fail "install 위임 실패 (ours=$PROJ_OURS)"; fi
 
-# ── update 위임 (전역) ──────────────────────────────────
-OUT="$("$CLI" update 2>&1)"; RC=$?
+# ── update 위임 (부트스트랩 재실행, 로컬 tarball 주입) ──
+TARBALL="$SANDBOX/cli-src.tar.gz"
+make_tarball "$TARBALL"
+OUT="$(SPINNER_SOURCE_TARBALL="$TARBALL" "$CLI" update 2>&1)"; RC=$?
 assert_eq "0" "$RC" "update 정상 종료"
-assert_file_exists "$HOME/.claude/scripts/.spinner-to-kor-version" "update → 전역 설치 경로 실행(스탬프)"
+assert_file_exists "$HOME/.claude/scripts/.spinner-to-kor-version" "update → 설치 경로 실행(스탬프)"
 
 # ── verify / status: 설치 후 ────────────────────────────
 OUT="$("$CLI" verify 2>&1)"

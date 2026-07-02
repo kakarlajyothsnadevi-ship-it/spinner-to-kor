@@ -196,7 +196,33 @@ else
 fi
 
 # ───────────────────────────────────────────────────────────
-# 5. 버전 스탬프 + 검증
+# 5. 배포 스냅샷 + PATH 진입점 (update/uninstall 자립용)
+# ───────────────────────────────────────────────────────────
+bold "== 5) 배포 스냅샷 + spinner-to-kor 진입점 =="
+SNAPSHOT="$HOME/.claude/spinner-to-kor"
+ENTRY_DIR="$HOME/.local/bin"
+ENTRY="$ENTRY_DIR/spinner-to-kor"
+# REPO_DIR 자체가 스냅샷이면(=update로 스냅샷에서 재실행) 자기복사 skip
+if [[ "$REPO_DIR" != "$SNAPSHOT" ]]; then
+  mkdir -p "$SNAPSHOT"
+  for item in install.sh uninstall.sh verify.sh spinner-to-kor bootstrap.sh VERSION \
+              src templates snippets; do
+    [[ -e "$REPO_DIR/$item" ]] || continue
+    rm -rf "${SNAPSHOT:?}/$item"
+    cp -R "$REPO_DIR/$item" "$SNAPSHOT/$item"
+  done
+  green "✓ 배포 스냅샷: $SNAPSHOT"
+fi
+mkdir -p "$ENTRY_DIR"
+ln -sf "$SNAPSHOT/spinner-to-kor" "$ENTRY"
+green "✓ 진입점: $ENTRY"
+case ":$PATH:" in
+  *":$ENTRY_DIR:"*) : ;;
+  *) yel "  참고: $ENTRY_DIR 가 PATH에 없습니다. shell 설정에 추가하거나 전체 경로로 실행하세요." ;;
+esac
+
+# ───────────────────────────────────────────────────────────
+# 6. 버전 스탬프 + 검증
 # ───────────────────────────────────────────────────────────
 echo "$REPO_VERSION" > "$STAMP"
 if [[ -n "$PREV_VERSION" ]]; then
@@ -206,11 +232,11 @@ else
 fi
 
 echo
-bold "== 5) 검증 =="
+bold "== 6) 검증 =="
 if [[ -x "$REPO_DIR/verify.sh" ]]; then
   "$REPO_DIR/verify.sh"
 fi
 
 echo
 bold "설치 완료. 새 터미널에서 'claude' 를 실행해 스피너가 한국어인지 확인하세요."
-echo "  (현재 실행 중인 claude 프로세스는 메모리에 옛 바이너리를 들고 있어 자동 반영되지 않습니다)"
+echo "  업데이트: spinner-to-kor update   |   제거: spinner-to-kor uninstall --restore-bin"

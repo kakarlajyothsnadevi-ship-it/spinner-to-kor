@@ -29,6 +29,8 @@
 | FR-14 | 프로젝트 스코프 설치 — `install.sh --project [DIR]`로 해당 프로젝트 `.claude/settings.json`에만 Layer A 적용 | 프로젝트 설치 후 타 프로젝트·전역 설정 무변경, `--project` 제거 대칭 동작 | [M2] **완료** (E2E 20 assertion, 전역↔프로젝트 상호 무간섭 검증) |
 | FR-15 | 도구 자체의 버전 스탬프와 업데이트 명령 제공 (`--update`) | 설치본 버전 파일 존재, repo 갱신 후 update 실행 시 재배치+리포트 | [M1] **완료** (M2에서 전방 배치 — FR-17 지원 목적) |
 | FR-16 | 단일 CLI 진입점 `spinner-to-kor <subcommand>` (기존 스크립트 하위 호환 유지) | 6개 서브커맨드 동작, 기존 `./install.sh` 등도 계속 동작 | [M2] **완료** (디스패처 + status 요약, 테스트 14건) |
+| FR-18 | **원격 한 줄 설치·자립 update/uninstall** — `curl \| bash` 부트스트랩이 GitHub release tarball 로 설치, 소스 디렉터리 없이도 update/uninstall 동작 | 부트스트랩 설치 후 스냅샷·진입점 생성, `spinner-to-kor update`(최신 release 무간섭)·`uninstall`(스냅샷까지 정리) 성공 | [M5] **완료** (test_bootstrap 18건, 로컬 tarball 주입 검증) |
+| FR-19 | 버전 관리 배포 — 설치는 고정 release 태그를 받는다 (재현 가능·롤백) | 부트스트랩이 latest release tarball 조회, release 부재 시 git clone 안내 | [M5] **완료** |
 | FR-17 | **무간섭 in-place 업데이트 (핵심)** — 기설치 사용자는 재설치·삭제 없이 새 버전이 반영되고, 사용자 설정·기존 설치 자산에 어떤 간섭도 없다. 구버전(마커 없는) 설치본은 in-place 업그레이드된다 | E2E: 레거시 설치 + 사용자 hook 상태에서 `install.sh --update` → 중복 0·사용자 hook 원형·멱등, 깨진 JSON 시 무변경 중단 | [M1] **완료** (마커 기반 머지 + 레거시 폴백) |
 
 ### 1.3 진단·복구
@@ -101,3 +103,4 @@
 | M2 (v1.1 설치 UX — **완료 2026-07-02**) | FR-14, 16 (FR-15는 M1으로 이동) |
 | M3 (v1.2 매핑 확장 — **완료 2026-07-02**) | FR-31, 32, 33 |
 | M4 (v2.0 플랫폼 — **코드 완료 2026-07-02**, Linux/WSL 실기 검증만 잔여) | FR-41, 42 / NFR-08 |
+| M5 (v2.1 원격 배포 — **완료 2026-07-02**) | FR-18, 19 |

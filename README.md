@@ -9,29 +9,42 @@ Claude Code CLI 실행 시 회전하는 영문 동사("Pondering...", "Schleppin
 
 > macOS(LaunchAgent + Mach-O ad-hoc 재서명) · Linux/WSL(systemd path unit, 재서명 불요) 지원. 네이티브 Windows 미지원.
 
-## 빠른 시작
+## 빠른 시작 — 한 줄 설치
 
 ```bash
-git clone <this-repo> claude-code-korean-spinner
-cd claude-code-korean-spinner
-./install.sh                # 또는: ./spinner-to-kor install
+curl -fsSL https://raw.githubusercontent.com/claude-code-expert/spinner/main/bootstrap.sh | bash
 ```
 
-모든 명령은 단일 진입점으로도 쓸 수 있습니다:
+부트스트랩이 GitHub 최신 release 를 받아 설치하고, `spinner-to-kor` 명령을 `~/.local/bin` 에 심습니다. 새 터미널에서 `claude` 실행 → 스피너에 한국어가 보이면 성공.
+
+이후 설치·업데이트·제거는 모두 이 한 명령으로:
 
 ```bash
-./spinner-to-kor <install|uninstall|update|verify|patch|status|help>
+spinner-to-kor update                 # 최신 release 로 무간섭 업데이트 (재설치·삭제 불필요)
+spinner-to-kor uninstall              # 제거 (hook·자동재패치·스크립트·스냅샷)
+spinner-to-kor uninstall --restore-bin  # 제거 + 바이너리 영문 복원
+spinner-to-kor status                 # 버전·패치·자동재패치 상태 요약
+spinner-to-kor verify                 # 6항목 자가 진단
 ```
 
-새 터미널에서 `claude` 실행 → 스피너에 한국어가 보이면 성공.
+> `~/.local/bin` 이 PATH에 없으면 설치 로그가 안내합니다. shell 설정에 추가하거나 `~/.local/bin/spinner-to-kor` 전체 경로로 실행하세요.
 
-특정 프로젝트에만 도구 라벨(Layer A)을 적용하려면:
+### 특정 프로젝트에만 (Layer A hook)
 
 ```bash
-./install.sh --project /path/to/project   # 생략 시 현재 디렉터리
+spinner-to-kor install --project /path/to/project   # 생략 시 현재 디렉터리
 ```
 
-바이너리 verb 한국어화(Layer B/C)는 머신 전역 자원이라 전역 설치(`./install.sh`)가 필요합니다.
+바이너리 verb 한국어화(Layer B/C)는 머신 전역 자원이라 전역 설치가 필요합니다.
+
+### 소스에서 직접 (개발자)
+
+```bash
+git clone https://github.com/claude-code-expert/spinner
+cd spinner
+./install.sh          # release 없이 로컬 소스로 설치
+tests/run.sh          # 전체 테스트
+```
 
 ## 무엇이 설치되는가
 
@@ -50,21 +63,21 @@ cd claude-code-korean-spinner
 
 | 상황 | 명령 |
 |---|---|
-| 설치 상태 점검 | `./verify.sh` |
-| **이 도구를 새 버전으로 업데이트** | `git pull && ./install.sh --update` — 기존 설치·사용자 설정 무간섭, 재설치·삭제 불필요 |
-| 특정 프로젝트에만 hook 설치/제거 | `./install.sh --project [DIR]` / `./uninstall.sh --project [DIR]` — 전역 설정 무접촉 |
+| 설치 상태 점검 | `spinner-to-kor verify` |
+| **이 도구를 새 버전으로 업데이트** | `spinner-to-kor update` — 최신 release 로 무간섭 반영, 재설치·삭제 불필요 |
+| 특정 프로젝트에만 hook 설치/제거 | `spinner-to-kor install --project [DIR]` / `uninstall --project [DIR]` — 전역 설정 무접촉 |
 | Claude Code 자동 업데이트 후 영문 verb가 보임 | `~/.claude/scripts/auto-patch-claude.sh` 수동 실행 |
 | 특정 바이너리만 패치 | `~/.claude/scripts/patch-spinner-verbs.sh /path/to/binary` |
 | 패치 여부만 조회 (수정 없음) | `python3 src/patch-spinner-verbs.py --check /path/to/binary` |
 | 신규 미매핑 verb 확인 | `python3 ~/.claude/scripts/detect-verbs.py /path/to/binary` |
 | 라벨 커스텀 / 위트 스타일 | `~/.claude/spinner-map.json` 작성 / `--style witty` — [MAPPING.md](./MAPPING.md) 참고 |
 | 패치 활동 실시간 모니터링 | `tail -f ~/.claude/logs/spinner-patch.log` |
-| 영문 복귀 (테스트용) | `./uninstall.sh --restore-bin` |
-| 전체 테스트 실행 | `tests/run.sh` |
+| 영문 복귀 (테스트용) | `spinner-to-kor uninstall --restore-bin` |
+| 전체 테스트 실행 (개발) | `tests/run.sh` |
 
 ## 무간섭 업데이트 보장
 
-이미 설치한 사용자는 **재설치·삭제 없이** `./install.sh --update` 한 번으로 새 기능·패치가 반영된다:
+이미 설치한 사용자는 **재설치·삭제 없이** `spinner-to-kor update` 한 번으로 새 기능·패치가 반영된다:
 
 - 사용자가 직접 등록한 `settings.json` hook은 어떤 경우에도 파괴·변형되지 않는다 (같은 matcher라도 별도 entry로 공존).
 - 구버전 설치본의 hook은 in-place 업그레이드된다 — 중복 생성 없음.
@@ -97,7 +110,22 @@ cd claude-code-korean-spinner
 
 
 
+## 메인테이너 — 새 버전 릴리스
+
+한 줄 설치는 GitHub **Releases** 의 최신 태그 tarball 을 받습니다. 새 버전 배포 절차:
+
+```bash
+# 1. VERSION 파일 갱신 + CHANGELOG 항목 추가 후 커밋
+# 2. 태그 + push
+git tag -a v2.1.0 -m "v2.1.0 — ..."
+git push origin main --tags
+# 3. GitHub Release 발행 (tarball 자동 첨부)
+gh release create v2.1.0 --title "v2.1.0" --notes-file <(sed -n '/## 2.1.0/,/## /p' CHANGELOG.md)
+```
+
+release 발행 즉시 기존 사용자의 `spinner-to-kor update` 가 새 버전을 받습니다. release 가 아직 없으면 부트스트랩이 `git clone` 대체 안내를 출력합니다.
+
 ## 오픈소스 배포시 참고
   - hardcoded plist는 reference/ 로 이동 완료 (사용자는 templates/만 보면 됩니다).
-  - install.sh가 {{HOME}}·{{HOMEBREW_PREFIX}} 자동 치환하므로 어느 macOS 계정에서도 그대로 동작합니다.
+  - 부트스트랩은 순수 bash+python3 — Node/npm 의존 없음. `bootstrap.sh` 는 `SPINNER_REPO`·`SPINNER_SOURCE_TARBALL` env 로 포크·오프라인 설치 지원.
   - 개발 계획·요구사항은 [docs/MILESTONES.md](./docs/MILESTONES.md)·[docs/REQUIREMENTS.md](./docs/REQUIREMENTS.md) 참고.

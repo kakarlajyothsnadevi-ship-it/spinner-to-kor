@@ -6,7 +6,7 @@ Claude Code CLI의 스피너 영문 verb 178개("Pondering...", "Schlepping..." 
 
 | 레이어 | 역할 | 대상 |
 |---|---|---|
-| A | PreToolUse hook `statusMessage` — 도구별 한국어 라벨 20개 | `~/.claude/settings.json` |
+| A | PreToolUse hook `statusMessage` 20개 + `spinnerVerbs` 동작별 verb 풀 25개 | `~/.claude/settings.json` |
 | B | Mach-O 바이너리 verb 178개 in-place 치환 + ad-hoc 재서명 | `~/.local/share/claude/versions/<버전>` |
 | C | FSEvents 감시 → 자동 업데이트 후 재패치 | `~/Library/LaunchAgents/dev.claude-spinner-patch.plist` |
 
@@ -46,6 +46,7 @@ Claude Code CLI의 스피너 영문 verb 178개("Pondering...", "Schlepping..." 
 - 셸 스크립트는 `bash` + `set -euo pipefail` 기준. macOS(BSD) 유틸 호환 유지 — GNU 전용 플래그 금지 (`readlink -f`는 macOS 12.3+ OK).
 - `set -o pipefail` 환경에서 `grep -c ... || echo 0` 패턴 금지 — 매치 0건 시 `"0\n0"` 이중 출력 (BUG-01, 수정됨). 미패치 판정은 반드시 `patch-spinner-verbs.py --check` 사용.
 - settings.json 머지/제거는 `src/merge-hooks.py`만 통해서 한다. 우리 hook 마커는 `command` 안 `# spinner-to-kor` 주석 — snippet에서 지우지 말 것. `LEGACY_LABELS`는 과거 배포본 고정값이므로 새 라벨 추가 금지.
+- verb 풀 교체는 공식 `spinnerVerbs` 설정(merge-hooks.py `SPINNER_VERBS`, byte 제약 없음)이 표시 경로 — 소유 판정이 exact-match이므로 **목록을 바꾸는 릴리스는 직전 목록을 `LEGACY_VERB_SETS`에 추가** 필수(고정값, 수정 금지). 사용자 자작 spinnerVerbs는 교체 금지. verb는 턴당 랜덤 1개 고정(활동 연동 아님) — 활동 연동 표시는 task activeForm이 verb보다 우선한다는 점 활용.
 - 바이너리 백업은 `patch-spinner-verbs.py` 한 곳만 생성 (셸 래퍼 백업 금지 — BUG-05). 백업명 `<binary>.bak.<YYYYmmdd-HHMMSS>`, 가장 오래된 .bak = 깨끗한 원본, 보존 정책은 원본+최신 2개.
 - sentinel 정의는 py의 `SENTINEL_VERBS` 한 곳 — 셸에서 자체 grep 금지.
 - 자동 재패치(LaunchAgent/systemd) 관련 로직은 `src/platform.sh`만 통해서 — install/uninstall/verify가 직접 launchctl/systemctl 호출 금지. 테스트는 `SPINNER_PLATFORM` env로 강제.

@@ -24,6 +24,23 @@ import tempfile
 
 MARKER = "spinner-to-kor"
 
+# Claude Code 공식 spinnerVerbs 설정(2.1.x)으로 스피너 verb 풀을 교체한다.
+# 바이너리 패치(Layer B)와 달리 byte 길이 제약이 없어 동작별 라벨이 가능하다.
+# 주의: verb는 응답 턴마다 랜덤 1개가 선택돼 턴 끝까지 고정된다(활동 연동 아님).
+# 소유 판정은 아래 목록 exact-match — 목록을 바꾸는 릴리스는 직전 목록을
+# LEGACY_VERB_SETS 에 추가해야 기존 설치 사용자가 in-place 갱신/제거된다.
+SPINNER_VERBS = [
+    "파일 분석중", "파일 작성중", "파일 검토중", "파일 리팩토링중", "파일 정리중",
+    "코드 분석중", "코드 생성중", "코드 검토중", "코드 리팩토링중",
+    "명령어 실행중", "테스트 실행중", "디버깅중", "오류 분석중", "로그 분석중",
+    "서버 실행중", "문서 작성중", "문서 분석중",
+    "구조 파악중", "계획 수립중", "컨텍스트 분석중", "요구사항 검토중",
+    "추론중", "사고중", "응답 생성중", "답변 작성중",
+]
+
+# 과거 배포본이 쓴 verb 목록들 — 고정값, 목록 추가만 하고 수정 금지 (LEGACY_LABELS 선례).
+LEGACY_VERB_SETS: tuple = ()
+
 # 구버전(마커 도입 전) 설치본이 사용한 statusMessage — 레거시 식별 폴백.
 # 이 목록은 과거 배포본 고정값이므로 새 라벨을 추가하지 않는다.
 LEGACY_LABELS = frozenset((
@@ -42,6 +59,14 @@ def sub_is_ours(sub) -> bool:
     if isinstance(cmd, str) and MARKER in cmd:
         return True
     return cmd == "true" and sub.get("statusMessage") in LEGACY_LABELS
+
+
+def spinner_verbs_is_ours(cur) -> bool:
+    """현재 또는 과거 배포본의 spinnerVerbs 인지 — 사용자 자작 설정은 False."""
+    if not isinstance(cur, dict) or cur.get("mode") != "replace":
+        return False
+    verbs = cur.get("verbs")
+    return verbs == SPINNER_VERBS or any(verbs == list(s) for s in LEGACY_VERB_SETS)
 
 
 def entry_is_ours(entry) -> bool:
@@ -124,8 +149,16 @@ def do_install(settings_path: str, snippet_path: str) -> str:
             pre.append(new_entry)
             added += 1
 
+    cur = settings.get("spinnerVerbs")
+    if cur is None or spinner_verbs_is_ours(cur):
+        settings["spinnerVerbs"] = {"mode": "replace", "verbs": list(SPINNER_VERBS)}
+        sv_msg = f"spinnerVerbs 적용({len(SPINNER_VERBS)}개)"
+    else:
+        sv_msg = "사용자 spinnerVerbs 보존(미변경)"
+
     write_settings(settings_path, settings)
-    return f"추가 {added}건, 갱신 {updated}건, 중복 정리 {deduped}건 (총 PreToolUse {len(pre)}개)"
+    return (f"추가 {added}건, 갱신 {updated}건, 중복 정리 {deduped}건 "
+            f"(총 PreToolUse {len(pre)}개) · {sv_msg}")
 
 
 def do_remove(settings_path: str) -> str:
@@ -135,30 +168,38 @@ def do_remove(settings_path: str) -> str:
     settings = load_settings(settings_path)
     hooks = settings.get("hooks")
     pre = hooks.get("PreToolUse") if isinstance(hooks, dict) else None
-    if not isinstance(pre, list):
-        return "PreToolUse 없음 — 제거할 것 없음"
 
     removed = stripped = 0
     new_pre = []
-    for entry in pre:
-        if entry_is_ours(entry):
-            removed += 1
-            continue
-        if isinstance(entry, dict) and isinstance(entry.get("hooks"), list) \
-                and any(sub_is_ours(s) for s in entry["hooks"]):
-            entry = {**entry, "hooks": [s for s in entry["hooks"] if not sub_is_ours(s)]}
-            stripped += 1
-        new_pre.append(entry)
+    if isinstance(pre, list):
+        for entry in pre:
+            if entry_is_ours(entry):
+                removed += 1
+                continue
+            if isinstance(entry, dict) and isinstance(entry.get("hooks"), list) \
+                    and any(sub_is_ours(s) for s in entry["hooks"]):
+                entry = {**entry, "hooks": [s for s in entry["hooks"] if not sub_is_ours(s)]}
+                stripped += 1
+            new_pre.append(entry)
 
-    hooks["PreToolUse"] = new_pre
-    # 우리가 비운 컨테이너만 정리 — 사용자 원형 복원 (왕복 무흔적)
-    if not new_pre:
-        del hooks["PreToolUse"]
-    if not hooks:
-        del settings["hooks"]
+        hooks["PreToolUse"] = new_pre
+        # 우리가 비운 컨테이너만 정리 — 사용자 원형 복원 (왕복 무흔적)
+        if not new_pre:
+            del hooks["PreToolUse"]
+        if not hooks:
+            del settings["hooks"]
+
+    sv_removed = spinner_verbs_is_ours(settings.get("spinnerVerbs"))
+    if sv_removed:
+        del settings["spinnerVerbs"]
+
+    if not isinstance(pre, list) and not sv_removed:
+        return "PreToolUse·spinnerVerbs 없음 — 제거할 것 없음"
 
     write_settings(settings_path, settings)
-    return f"제거 {removed}건, 혼합 entry 정리 {stripped}건 (잔여 PreToolUse {len(new_pre)}개)"
+    sv_msg = "spinnerVerbs 제거" if sv_removed else "spinnerVerbs 해당 없음"
+    return (f"제거 {removed}건, 혼합 entry 정리 {stripped}건 "
+            f"(잔여 PreToolUse {len(new_pre)}개) · {sv_msg}")
 
 
 def main() -> int:

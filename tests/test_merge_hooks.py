@@ -31,7 +31,7 @@ LEGACY_READ_HOOK = {  # 구버전(마커 없음) 설치본 형식
 }
 
 
-class MergeHooksTest(unittest.TestCase):
+class _MergeTestBase(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="spinner-merge-"))
         self.addCleanup(lambda: __import__("shutil").rmtree(self.tmp, True))
@@ -61,6 +61,8 @@ class MergeHooksTest(unittest.TestCase):
                 and any("spinner-to-kor" in str(s.get("command", ""))
                         for s in e.get("hooks", []) if isinstance(s, dict))]
 
+
+class MergeHooksTest(_MergeTestBase):
     # ── 설치 ──────────────────────────────────────────────
 
     def test_install_creates_settings_when_absent(self):
@@ -179,6 +181,73 @@ class MergeHooksTest(unittest.TestCase):
     def test_install_then_remove_roundtrip_restores_original(self):
         """왕복 후 사용자 설정 원형 복원 (빈 컨테이너 정리 포함)."""
         original = {"model": "opus", "hooks": {"PreToolUse": [USER_BASH_HOOK]}}
+        self.write_settings(original)
+        self.run_cmd("install")
+        self.run_cmd("remove")
+        self.assertEqual(self.read_settings(), original)
+
+
+class SpinnerVerbsTest(_MergeTestBase):
+    """spinnerVerbs 무간섭 머지/제거 — Claude Code 공식 설정으로 verb 풀 교체.
+
+    계약은 hook과 동일: 사용자 자신의 spinnerVerbs 는 파괴하지 않고,
+    우리 것(현재 목록 또는 LEGACY_VERB_SETS)만 갱신/제거한다.
+    """
+    USER_VERBS = {"mode": "append", "verbs": ["Vibing", "Grooving"]}
+
+    def spinner_verbs(self):
+        return self.read_settings().get("spinnerVerbs")
+
+    def test_install_writes_spinner_verbs(self):
+        r = self.run_cmd("install")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        sv = self.spinner_verbs()
+        self.assertEqual(sv["mode"], "replace")
+        self.assertGreaterEqual(len(sv["verbs"]), 20)
+        self.assertEqual(len(sv["verbs"]), len(set(sv["verbs"])))  # 중복 없음
+        for label in ("파일 리팩토링중", "명령어 실행중", "테스트 실행중", "응답 생성중"):
+            self.assertIn(label, sv["verbs"])
+
+    def test_install_spinner_verbs_idempotent(self):
+        self.run_cmd("install")
+        first = self.read_settings()
+        r = self.run_cmd("install")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.read_settings(), first)
+
+    def test_install_preserves_user_spinner_verbs(self):
+        """FR-17: 사용자가 직접 설정한 spinnerVerbs 는 교체하지 않는다."""
+        self.write_settings({"spinnerVerbs": self.USER_VERBS})
+        r = self.run_cmd("install")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.spinner_verbs(), self.USER_VERBS)
+
+    def test_remove_deletes_our_spinner_verbs(self):
+        self.run_cmd("install")
+        r = self.run_cmd("remove")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertNotIn("spinnerVerbs", self.read_settings())
+
+    def test_remove_preserves_user_spinner_verbs(self):
+        self.write_settings({"spinnerVerbs": self.USER_VERBS})
+        r = self.run_cmd("remove")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(self.spinner_verbs(), self.USER_VERBS)
+
+    def test_remove_spinner_verbs_without_pretooluse(self):
+        """PreToolUse 가 없어도 spinnerVerbs 는 제거돼야 한다 (조기 반환 금지)."""
+        self.run_cmd("install")
+        s = self.read_settings()
+        del s["hooks"]
+        self.write_settings(s)
+        r = self.run_cmd("remove")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertNotIn("spinnerVerbs", self.read_settings())
+
+    def test_roundtrip_with_user_spinner_verbs(self):
+        original = {"model": "opus",
+                    "spinnerVerbs": self.USER_VERBS,
+                    "hooks": {"PreToolUse": [USER_BASH_HOOK]}}
         self.write_settings(original)
         self.run_cmd("install")
         self.run_cmd("remove")

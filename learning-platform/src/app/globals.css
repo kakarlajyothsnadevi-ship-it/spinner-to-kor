@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * SkillBloom design tokens.
+ * Neutral base + a single warm coral primary and a violet accent used for
+ * meaning (state / hierarchy), not decoration. Light + dark themes below.
+ */
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+
+  --bg: 40 33% 98%;
+  --surface: 0 0% 100%;
+  --surface-2: 40 30% 96%;
+  --border: 30 12% 88%;
+  --fg: 222 25% 14%;
+  --muted: 222 10% 44%;
+
+  --primary: 6 78% 57%;
+  --primary-fg: 0 0% 100%;
+  --accent: 258 68% 58%;
+  --accent-fg: 0 0% 100%;
+
+  --success: 152 55% 40%;
+  --warning: 36 92% 46%;
+  --danger: 2 72% 52%;
+}
+
+.dark {
+  --bg: 224 30% 8%;
+  --surface: 223 26% 12%;
+  --surface-2: 223 22% 16%;
+  --border: 223 16% 24%;
+  --fg: 210 30% 94%;
+  --muted: 216 14% 64%;
+
+  --primary: 6 80% 62%;
+  --primary-fg: 0 0% 100%;
+  --accent: 258 78% 72%;
+  --accent-fg: 224 40% 12%;
+
+  --success: 152 50% 52%;
+  --warning: 38 90% 58%;
+  --danger: 2 76% 64%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: hsl(var(--bg));
+  color: hsl(var(--fg));
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Focus visibility for accessibility across all interactive elements */
+:focus-visible {
+  outline: 2px solid hsl(var(--accent));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Thin, unobtrusive scrollbars */
+.scroll-slim::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 8px;
+}

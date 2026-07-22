@@ -1,0 +1,264 @@
+// SkillBloom database schema.
+//
+// The MVP runs on an in-memory / localStorage mock (src/lib/data.ts + store.tsx)
+// so it works with zero external services. This schema documents the intended
+// PostgreSQL structure and keeps the mock data shapes honest. To go live:
+//   1. Provision PostgreSQL and set DATABASE_URL.
+//   2. `npx prisma migrate dev` to create tables.
+//   3. Swap the mock store for Prisma-backed data access + real auth.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------- Roles & users ----------------------------------------------------
+enum Role {
+  LEARNER
+  PARENT
+  ADMIN
+}
+
+enum AgeGroup {
+  CHILD
+  TEEN
+  ADULT
+  SENIOR
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  HOBBY
+  INTERMEDIATE
+  ADVANCED
+  PROFESSIONAL
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  role          Role     @default(LEARNER)
+  ageGroup      AgeGroup @default(ADULT)
+  age           Int?
+  experience    ExperienceLevel @default(BEGINNER)
+  goals         String[]
+  language      String   @default("en")
+  lessonDuration Int     @default(15)
+  materials     String[]
+  accessibility String[]
+  preferredPersonality String @default("friendly")
+  avatarColor   String   @default("6 78% 57%")
+  onboarded     Boolean  @default(false)
+  streak        Int      @default(0)
+  points        Int      @default(0)
+  level         Int      @default(1)
+
+  // Parent <-> child (self relation)
+  parentId      String?
+  parent        User?    @relation("ParentChildren", fields: [parentId], references: [id])
+  children      User[]   @relation("ParentChildren")
+
+  enrollments   Enrollment[]
+  submissions   Submission[]
+  certificates  Certificate[]
+  quizAttempts  QuizAttempt[]
+  subscription  Subscription?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// -------- Catalog ----------------------------------------------------------
+model SkillCategory {
+  id          String   @id @default(cuid())
+  name        String
+  emoji       String
+  description String
+  courses     Course[]
+}
+
+model Tutor {
+  id          String   @id @default(cuid())
+  name        String
+  personality String
+  tagline     String
+  emoji       String
+  voice       String
+  courses     Course[]
+}
+
+model Course {
+  id            String   @id @default(cuid())
+  categoryId    String
+  category      SkillCategory @relation(fields: [categoryId], references: [id])
+  tutorId       String
+  tutor         Tutor    @relation(fields: [tutorId], references: [id])
+  name          String
+  image         String
+  difficulty    Difficulty @default(BEGINNER)
+  ageGroups     AgeGroup[]
+  estimatedHours Int
+  materials     String[]
+  rating        Float    @default(0)
+  ratingsCount  Int      @default(0)
+  paid          Boolean  @default(false)
+  price         Int?
+  summary       String
+  outcomes      String[]
+  finalProject  String
+  published     Boolean  @default(true)
+
+  modules       Module[]
+  lessons       Lesson[]
+  quizzes       Quiz[]
+  enrollments   Enrollment[]
+  homeworks     Homework[]
+}
+
+model Module {
+  id       String  @id @default(cuid())
+  courseId String
+  course   Course  @relation(fields: [courseId], references: [id])
+  title    String
+  order    Int
+  lessons  Lesson[]
+}
+
+model Lesson {
+  id         String  @id @default(cuid())
+  courseId   String
+  course     Course  @relation(fields: [courseId], references: [id])
+  moduleId   String?
+  module     Module? @relation(fields: [moduleId], references: [id])
+  title      String
+  objective  String
+  durationMin Int
+  materials  String[]
+  safety     String[]
+  order      Int
+  steps      LessonStep[]
+  homeworks  Homework[]
+}
+
+model LessonStep {
+  id          String @id @default(cuid())
+  lessonId    String
+  lesson      Lesson @relation(fields: [lessonId], references: [id])
+  title       String
+  instruction String
+  tutorScript String
+  referenceKind    String?
+  referenceCaption String?
+  tip         String?
+  order       Int
+}
+
+// -------- Progress & submissions ------------------------------------------
+model Enrollment {
+  id                 String   @id @default(cuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id])
+  courseId           String
+  course             Course   @relation(fields: [courseId], references: [id])
+  progress           Int      @default(0)
+  completedLessonIds String[]
+  lastLessonId       String?
+  createdAt          DateTime @default(now())
+
+  @@unique([userId, courseId])
+}
+
+model Homework {
+  id             String   @id @default(cuid())
+  courseId       String
+  course         Course   @relation(fields: [courseId], references: [id])
+  lessonId       String
+  lesson         Lesson   @relation(fields: [lessonId], references: [id])
+  title          String
+  prompt         String
+  dueInDays      Int
+  submissionTypes String[]
+  submissions    Submission[]
+}
+
+model Submission {
+  id          String   @id @default(cuid())
+  homeworkId  String
+  homework    Homework @relation(fields: [homeworkId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  contentText String?
+  fileUrl     String?
+  status      String   @default("submitted")
+  // Structured feedback
+  wentWell    String?
+  toImprove   String?
+  safety      String?
+  nextStep    String?
+  score       Int?
+  createdAt   DateTime @default(now())
+}
+
+model Quiz {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  title     String
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+}
+
+model QuizQuestion {
+  id           String @id @default(cuid())
+  quizId       String
+  quiz         Quiz   @relation(fields: [quizId], references: [id])
+  kind         String
+  prompt       String
+  imageCaption String?
+  options      String[]
+  correctIndex Int?
+  explanation  String?
+  order        Int
+}
+
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  quizId    String
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  score     Int
+  createdAt DateTime @default(now())
+}
+
+model Certificate {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  courseName String
+  tutorName  String
+  category   String
+  issuedOn   DateTime @default(now())
+}
+
+// -------- Billing ----------------------------------------------------------
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  plan      String   @default("free")
+  status    String   @default("active")
+  renewsAt  DateTime?
+}

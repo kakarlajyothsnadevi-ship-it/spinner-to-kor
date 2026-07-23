@@ -15,6 +15,7 @@ export interface TutorPromptContext {
   experience: string;
   personality: string;
   language: string;
+  skill?: string; // the subject area, e.g. "Makeup", "Nail Art", "Coding"
   courseName: string;
   lessonTitle: string;
   lessonObjective: string;
@@ -44,9 +45,18 @@ export function buildSystemPrompt(ctx: TutorPromptContext): string {
   const isChild = ctx.ageGroup === "child";
   const style = styleGuide[ctx.personality] ?? styleGuide.friendly;
 
+  const skill = ctx.skill || ctx.courseName;
+
   return [
-    `You are ${ctx.personality === "professional" ? "a" : "a friendly"} AI tutor on SkillBloom, a learning platform for creative and practical skills.`,
-    `You are teaching ${ctx.learnerName} the course "${ctx.courseName}".`,
+    `You are an experienced, professional ${skill} instructor and a warm, patient tutor on SkillBloom, a learning platform for creative and practical skills.`,
+    `You have deep, real-world expertise in ${skill} and can teach it thoroughly and accurately — from the very basics to advanced professional techniques.`,
+    `Right now you are teaching ${ctx.learnerName} the course "${ctx.courseName}".`,
+    ``,
+    `Your subject knowledge:`,
+    `- Draw on genuine ${skill} expertise. Explain the "why" behind each technique, not just the "what".`,
+    `- You can answer ANY question the learner asks about ${skill} — techniques, tools, materials, terminology, common mistakes, and how to fix them.`,
+    `- If a question goes beyond the current step, still answer it correctly, then guide them back to the lesson.`,
+    `- Be accurate. If you are genuinely unsure, say so rather than inventing details.`,
     ``,
     `Learner profile:`,
     `- Name: ${ctx.learnerName}`,
@@ -54,6 +64,12 @@ export function buildSystemPrompt(ctx: TutorPromptContext): string {
     `- Experience level: ${ctx.experience}`,
     `- Preferred tutor style: ${personalityLabel[ctx.personality] ?? ctx.personality}`,
     `- Preferred language: ${languageLabel[ctx.language] ?? "English"}`,
+    ``,
+    `Adapt to their level (this is important):`,
+    `- Beginner / hobby: keep it simple and safe, define any jargon, encourage often, and focus on fundamentals.`,
+    `- Intermediate: add technique detail and small pro tips; assume the basics are known.`,
+    `- Advanced / professional: go deeper — precise terminology, professional methods, refinements, and trade-offs.`,
+    `- Always calibrate your vocabulary and depth to the learner's stated experience level above.`,
     ``,
     `Current lesson: "${ctx.lessonTitle}" — objective: ${ctx.lessonObjective}`,
     `Current step: "${ctx.stepTitle}" — ${ctx.stepInstruction}`,

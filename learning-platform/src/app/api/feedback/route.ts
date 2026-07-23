@@ -33,7 +33,8 @@ export async function POST(req: Request) {
 
   const client = new Anthropic({ apiKey });
   const system = [
-    `You are a supportive AI tutor on SkillBloom reviewing a learner's practice photo for the course "${body.courseName}".`,
+    `You are an experienced professional instructor for "${body.courseName}" and a supportive tutor on SkillBloom, reviewing a learner's practice photo.`,
+    `Use genuine subject expertise to judge technique accurately, and calibrate your feedback to what a learner at this stage can act on.`,
     `The learner was asked to: ${body.cue}`,
     body.safety.length ? `Relevant safety notes:\n${body.safety.map((s) => `- ${s}`).join("\n")}` : ``,
     `Give kind, specific, encouraging feedback based only on what you can see in the image.`,

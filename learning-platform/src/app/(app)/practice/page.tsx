@@ -61,9 +61,9 @@ export default function PracticePage() {
         }
       }
       // No key configured, no image, or error → sample feedback.
-      setFeedback(feedbackByCourse[courseId]);
+      setFeedback(feedbackByCourse[courseId] ?? genericFeedback);
     } catch {
-      setFeedback(feedbackByCourse[courseId]);
+      setFeedback(feedbackByCourse[courseId] ?? genericFeedback);
     } finally {
       setAnalysing(false);
     }
@@ -160,9 +160,21 @@ function FeedbackRow({ tone, label, text }: { tone: "success" | "warning" | "dan
 }
 
 const practiceCues: Record<string, string> = {
-  "course-makeup-101": "apply your base on one cheek first, then show me your nails— I mean your cheek — when you're ready.",
+  "course-makeup-101": "apply your base on one cheek first, then show me the result when you're ready.",
   "course-nail-101": "apply the base coat first. Show me your nails when you are ready.",
   "course-coding-101": "write one heading and one paragraph in HTML, then upload a screenshot of your page.",
+  "course-drawing-101": "block in your object with simple shapes, then show me your light sketch.",
+  "course-baking-101": "set up your station safely and show me your measured ingredients.",
+  "course-photo-101": "take one photo using the grid with your subject on a line, then upload it.",
+  "course-music-101": "program a kick-and-snare pattern, then share a short clip.",
+  "course-speaking-101": "write your one main message and three points, then show me your outline.",
+};
+
+const genericFeedback = {
+  well: "Nice work — you clearly followed the steps and gave it a real try.",
+  improve: "Take your time on the trickiest part and repeat it once more to build consistency.",
+  safety: "Keep following the lesson's safety notes and work at a comfortable, unhurried pace.",
+  next: "You're ready to move on to the next step of the lesson.",
 };
 
 const feedbackByCourse: Record<string, { well: string; improve: string; safety: string; next: string }> = {

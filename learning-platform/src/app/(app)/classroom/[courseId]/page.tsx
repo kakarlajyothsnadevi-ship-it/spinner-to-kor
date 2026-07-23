@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
-import { getCourse, getTutor } from "@/lib/data";
+import { getCategory, getCourse, getTutor } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { Badge, Button, Card, CardBody, Progress, SafetyNote } from "@/components/ui";
 import {
@@ -164,6 +164,7 @@ export default function ClassroomPage({ params }: { params: { courseId: string }
       experience: user?.experience ?? "beginner",
       personality,
       language: user?.language ?? "en",
+      skill: getCategory(course!.categoryId)?.name ?? course!.name,
       courseName: course!.name,
       lessonTitle: lesson!.title,
       lessonObjective: lesson!.objective,

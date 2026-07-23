@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
@@ -21,8 +21,8 @@ import type { TutorPromptContext, TutorTurn } from "@/lib/tutor-api";
 
 type ChatMsg = { id: number; from: "tutor" | "learner"; text: string };
 
-export default function ClassroomPage({ params }: { params: Promise<{ courseId: string }> }) {
-  const { courseId } = use(params);
+export default function ClassroomPage({ params }: { params: { courseId: string } }) {
+  const { courseId } = params;
   const router = useRouter();
   const course = getCourse(courseId);
   const { user, enrollments, completeLesson, enroll } = useStore();

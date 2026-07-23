@@ -1,6 +1,5 @@
 "use client";
 
-import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { catalogTeasers, getCategory, getCourse, getTutor } from "@/lib/data";
@@ -8,8 +7,8 @@ import { useStore } from "@/lib/store";
 import { Badge, Button, Card, CardBody, LinkButton, SafetyNote } from "@/components/ui";
 import { IconCheck } from "@/components/icons";
 
-export default function CourseDetailsPage({ params }: { params: Promise<{ courseId: string }> }) {
-  const { courseId } = use(params);
+export default function CourseDetailsPage({ params }: { params: { courseId: string } }) {
+  const { courseId } = params;
   const { enrollments, enroll } = useStore();
   const course = getCourse(courseId);
 

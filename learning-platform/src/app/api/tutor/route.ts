@@ -41,32 +41,55 @@ export async function POST(req: Request) {
 
   const client = new Anthropic({ apiKey });
   const encoder = new TextEncoder();
+  const system = buildSystemPrompt(body.context);
+  const messages = trimmed.map((m) => ({ role: m.role, content: m.content }));
+  const wantFast = body.fast === true;
 
   // Stream text deltas straight to the browser so the tutor starts "speaking"
   // immediately instead of waiting for the whole reply. Short replies keep this
   // well under any timeout.
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
-      try {
-        const stream = client.messages.stream({
-          model: MODEL,
-          max_tokens: 300,
-          system: buildSystemPrompt(body.context),
-          messages: trimmed.map((m) => ({ role: m.role, content: m.content })),
-        });
+      let sentAny = false;
+      let refused = false;
 
-        let sentAny = false;
+      // One streaming attempt. `fast` uses Opus 4.8 fast mode (premium, ~2.5x
+      // faster) via the beta endpoint; otherwise the standard endpoint.
+      const pump = async (fast: boolean) => {
+        const stream = fast
+          ? client.beta.messages.stream({
+              model: MODEL,
+              max_tokens: 300,
+              system,
+              messages,
+              speed: "fast",
+              betas: ["fast-mode-2026-02-01"],
+            })
+          : client.messages.stream({ model: MODEL, max_tokens: 300, system, messages });
+
         for await (const event of stream) {
           if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
             sentAny = true;
             controller.enqueue(encoder.encode(event.delta.text));
           }
         }
-
         const final = await stream.finalMessage();
-        if (final.stop_reason === "refusal" && !sentAny) {
-          controller.enqueue(encoder.encode(REFUSAL_REPLY));
+        refused = final.stop_reason === "refusal";
+      };
+
+      try {
+        try {
+          await pump(wantFast);
+        } catch (err) {
+          // Fast mode has its own rate limit — if it fails before any text was
+          // streamed, retry once at standard speed instead of failing.
+          if (wantFast && !sentAny) {
+            await pump(false);
+          } else {
+            throw err;
+          }
         }
+        if (refused && !sentAny) controller.enqueue(encoder.encode(REFUSAL_REPLY));
         controller.close();
       } catch {
         // Rate limit / network / auth — surface an error so the client can
@@ -79,7 +102,7 @@ export async function POST(req: Request) {
   return new Response(readable, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "X-Tutor-Mode": "live",
+      "X-Tutor-Mode": wantFast ? "fast" : "live",
       "Cache-Control": "no-store",
     },
   });

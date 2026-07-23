@@ -28,6 +28,7 @@ export interface TutorPromptContext {
 export interface TutorRequestBody {
   messages: TutorTurn[];
   context: TutorPromptContext;
+  fast?: boolean; // opt in to Opus 4.8 fast mode (premium, ~2.5x faster)
 }
 
 const styleGuide: Record<string, string> = {

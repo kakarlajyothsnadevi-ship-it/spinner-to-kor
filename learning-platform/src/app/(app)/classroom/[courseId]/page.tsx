@@ -39,6 +39,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
   const [camError, setCamError] = useState<string | null>(null);
   const [thinking, setThinking] = useState(false);
   const [aiMode, setAiMode] = useState<"live" | "offline" | null>(null);
+  const [fast, setFast] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
@@ -171,7 +172,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
       const res = await fetch("/api/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, context }),
+        body: JSON.stringify({ messages: history, context, fast }),
       });
 
       // JSON response = control message (no key configured, or an error) → offline.
@@ -378,11 +379,24 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
           <Card className="flex flex-col">
             <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
               <span className="text-sm font-medium text-fg">Chat with {tutor?.name}</span>
-              {aiMode === "live" ? (
-                <Badge tone="success">✦ AI live</Badge>
-              ) : aiMode === "offline" ? (
-                <Badge tone="neutral">Demo mode</Badge>
-              ) : null}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFast((f) => !f)}
+                  aria-pressed={fast}
+                  title="Fast mode makes the AI tutor reply faster (premium speed). Only affects the live AI."
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                    fast ? "bg-warning/15 text-warning" : "bg-surface-2 text-muted hover:text-fg"
+                  }`}
+                >
+                  ⚡ Fast {fast ? "on" : "off"}
+                </button>
+                {aiMode === "live" ? (
+                  <Badge tone="success">✦ AI live</Badge>
+                ) : aiMode === "offline" ? (
+                  <Badge tone="neutral">Demo mode</Badge>
+                ) : null}
+              </div>
             </div>
             <div ref={chatRef} className="max-h-72 min-h-[12rem] flex-1 space-y-2 overflow-y-auto p-3 scroll-slim">
               {messages.map((m) => (

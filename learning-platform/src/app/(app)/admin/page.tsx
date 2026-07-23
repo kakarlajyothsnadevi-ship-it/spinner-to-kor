@@ -9,10 +9,10 @@ const tabs = ["Overview", "Courses", "Tutors", "Learners", "Moderation"] as cons
 type Tab = (typeof tabs)[number];
 
 const learners = [
-  { name: "Aanya", plan: "Family", courses: 2, active: "Today", flagged: false },
-  { name: "Rohan", plan: "Monthly", courses: 4, active: "Yesterday", flagged: false },
+  { name: "Aanya", plan: "Free", courses: 2, active: "Today", flagged: false },
+  { name: "Rohan", plan: "Free", courses: 4, active: "Yesterday", flagged: false },
   { name: "Meera", plan: "Free", courses: 1, active: "3 days ago", flagged: false },
-  { name: "Dev", plan: "Annual", courses: 6, active: "Today", flagged: true },
+  { name: "Dev", plan: "Free", courses: 6, active: "Today", flagged: true },
 ];
 
 const flagged = [
@@ -106,7 +106,7 @@ export default function AdminDashboardPage() {
                   <span className="text-2xl" aria-hidden>{c.image}</span>
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-fg">{c.name}</div>
-                    <div className="text-xs text-muted">{c.lessonCount} lessons · <span className="capitalize">{c.difficulty}</span> · {c.paid ? "Paid" : "Free"}</div>
+                    <div className="text-xs text-muted">{c.lessonCount} lessons · <span className="capitalize">{c.difficulty}</span> · Free</div>
                   </div>
                   <Badge tone="success">Published</Badge>
                   <Button variant="ghost" size="sm">Edit</Button>

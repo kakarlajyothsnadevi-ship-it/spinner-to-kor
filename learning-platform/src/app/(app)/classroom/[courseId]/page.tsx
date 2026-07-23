@@ -71,6 +71,19 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
     msgId.current += 1;
     setMessages((m) => [...m, { id: msgId.current, from: "learner", text }]);
   }
+  // For streaming: add an empty tutor bubble we fill in as tokens arrive.
+  function addTutorPlaceholder(): number {
+    msgId.current += 1;
+    const id = msgId.current;
+    setMessages((m) => [...m, { id, from: "tutor", text: "" }]);
+    return id;
+  }
+  function updateMessage(id: number, text: string) {
+    setMessages((m) => m.map((msg) => (msg.id === id ? { ...msg, text } : msg)));
+  }
+  function removeMessage(id: number) {
+    setMessages((m) => m.filter((msg) => msg.id !== id));
+  }
 
   // Greet once the lesson is known.
   useEffect(() => {
@@ -160,12 +173,44 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: history, context }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.reply) {
-        setAiMode("live");
-        pushTutor(data.reply);
+
+      // JSON response = control message (no key configured, or an error) → offline.
+      const contentType = res.headers.get("content-type") ?? "";
+      if (contentType.includes("application/json") || !res.ok || !res.body) {
+        setThinking(false);
+        setAiMode("offline");
+        offlineReply(text);
+        return;
+      }
+
+      // Streamed text: show words as they arrive, then speak the full reply.
+      setAiMode("live");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      const bubbleId = addTutorPlaceholder();
+      let acc = "";
+      let firstChunk = true;
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          acc += decoder.decode(value, { stream: true });
+          if (firstChunk) {
+            firstChunk = false;
+            setThinking(false); // hide typing dots once real text starts
+          }
+          updateMessage(bubbleId, acc);
+        }
+      } catch {
+        /* partial stream — keep whatever arrived */
+      }
+
+      if (acc.trim()) {
+        setSpeaking(true);
+        speak(acc, { rate, onEnd: () => setSpeaking(false) });
       } else {
-        // Key not configured, rate-limited, or error → offline tutor.
+        // Stream failed before any text → clean up and fall back offline.
+        removeMessage(bubbleId);
         setAiMode("offline");
         offlineReply(text);
       }

@@ -42,7 +42,7 @@ export function CourseCard({ course }: { course: TeaserLike }) {
       <div className="flex flex-1 flex-col p-4">
         <div className="mb-2 flex items-center gap-2">
           <Badge tone="neutral">{category?.name}</Badge>
-          <Badge tone={course.paid ? "accent" : "success"}>{course.paid ? `₹${(course.price ?? 0) * 80}` : "Free"}</Badge>
+          <Badge tone="success">Free</Badge>
         </div>
         <h3 className="font-semibold leading-snug text-fg">{course.name}</h3>
         <p className="mt-1 line-clamp-2 text-sm text-muted">{course.summary}</p>

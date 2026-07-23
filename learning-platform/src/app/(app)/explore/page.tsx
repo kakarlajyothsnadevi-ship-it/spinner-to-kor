@@ -9,24 +9,20 @@ import type { Difficulty } from "@/lib/types";
 
 const allCourses = [...courses, ...catalogTeasers];
 const difficulties: (Difficulty | "all")[] = ["all", "beginner", "intermediate", "advanced"];
-const priceFilters = ["all", "free", "paid"] as const;
 
 export default function ExplorePage() {
   const [category, setCategory] = useState("all");
   const [difficulty, setDifficulty] = useState<Difficulty | "all">("all");
-  const [price, setPrice] = useState<(typeof priceFilters)[number]>("all");
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
     return allCourses.filter((c) => {
       if (category !== "all" && c.categoryId !== category) return false;
       if (difficulty !== "all" && c.difficulty !== difficulty) return false;
-      if (price === "free" && c.paid) return false;
-      if (price === "paid" && !c.paid) return false;
       if (query && !c.name.toLowerCase().includes(query.toLowerCase()) && !c.summary.toLowerCase().includes(query.toLowerCase())) return false;
       return true;
     });
-  }, [category, difficulty, price, query]);
+  }, [category, difficulty, query]);
 
   return (
     <div className="space-y-6">
@@ -55,23 +51,16 @@ export default function ExplorePage() {
       </div>
 
       {/* Secondary filters */}
-      <div className="flex flex-wrap gap-6">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wide text-muted">Level</span>
-          {difficulties.map((d) => (
-            <FilterChip key={d} small active={difficulty === d} onClick={() => setDifficulty(d)}>
-              <span className="capitalize">{d}</span>
-            </FilterChip>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wide text-muted">Price</span>
-          {priceFilters.map((p) => (
-            <FilterChip key={p} small active={price === p} onClick={() => setPrice(p)}>
-              <span className="capitalize">{p}</span>
-            </FilterChip>
-          ))}
-        </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted">Level</span>
+        {difficulties.map((d) => (
+          <FilterChip key={d} small active={difficulty === d} onClick={() => setDifficulty(d)}>
+            <span className="capitalize">{d}</span>
+          </FilterChip>
+        ))}
+        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
+          ✓ Every course is free
+        </span>
       </div>
 
       <SectionHeading title={`${filtered.length} course${filtered.length === 1 ? "" : "s"}`} />

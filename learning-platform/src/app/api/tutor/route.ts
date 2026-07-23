@@ -8,6 +8,8 @@ export const dynamic = "force-dynamic";
 
 const MODEL = "claude-opus-4-8";
 const MAX_TURNS = 12; // cap history sent to the model
+const REFUSAL_REPLY =
+  "I'd rather not go there, but I'm happy to keep helping with this lesson. What would you like to try next?";
 
 export async function POST(req: Request) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -38,40 +40,47 @@ export async function POST(req: Request) {
   }
 
   const client = new Anthropic({ apiKey });
+  const encoder = new TextEncoder();
 
-  try {
-    // Short conversational replies — non-streaming keeps well under HTTP timeouts.
-    const response = await client.messages.create({
-      model: MODEL,
-      max_tokens: 400,
-      system: buildSystemPrompt(body.context),
-      messages: trimmed.map((m) => ({ role: m.role, content: m.content })),
-    });
+  // Stream text deltas straight to the browser so the tutor starts "speaking"
+  // immediately instead of waiting for the whole reply. Short replies keep this
+  // well under any timeout.
+  const readable = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      try {
+        const stream = client.messages.stream({
+          model: MODEL,
+          max_tokens: 300,
+          system: buildSystemPrompt(body.context),
+          messages: trimmed.map((m) => ({ role: m.role, content: m.content })),
+        });
 
-    if (response.stop_reason === "refusal") {
-      return NextResponse.json({
-        reply:
-          "I'd rather not go there, but I'm happy to keep helping with this lesson. What would you like to try next?",
-        model: response.model,
-      });
-    }
+        let sentAny = false;
+        for await (const event of stream) {
+          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+            sentAny = true;
+            controller.enqueue(encoder.encode(event.delta.text));
+          }
+        }
 
-    const reply = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("")
-      .trim();
+        const final = await stream.finalMessage();
+        if (final.stop_reason === "refusal" && !sentAny) {
+          controller.enqueue(encoder.encode(REFUSAL_REPLY));
+        }
+        controller.close();
+      } catch {
+        // Rate limit / network / auth — surface an error so the client can
+        // fall back to the offline tutor.
+        controller.error(new Error("tutor_unavailable"));
+      }
+    },
+  });
 
-    return NextResponse.json({
-      reply: reply || "Let's keep going — could you say a little more about what you'd like help with?",
-      model: response.model,
-    });
-  } catch (err) {
-    // Rate limits, network, etc. — client falls back to the offline tutor.
-    const status = err instanceof Anthropic.APIError ? err.status ?? 502 : 502;
-    return NextResponse.json(
-      { error: "The AI tutor is unavailable right now." },
-      { status: status >= 400 && status < 600 ? status : 502 },
-    );
-  }
+  return new Response(readable, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "X-Tutor-Mode": "live",
+      "Cache-Control": "no-store",
+    },
+  });
 }

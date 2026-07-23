@@ -47,7 +47,7 @@ const NAV: NavItem[] = [
 ];
 
 const NAV_BOTTOM: NavItem[] = [
-  { href: "/subscription", label: "Subscription", icon: IconSubscription, roles: ["learner", "parent"] },
+  { href: "/subscription", label: "Membership", icon: IconSubscription, roles: ["learner", "parent"] },
   { href: "/profile", label: "Profile", icon: IconProfile, roles: ["learner", "parent", "admin"] },
   { href: "/settings", label: "Settings", icon: IconSettings, roles: ["learner", "parent", "admin"] },
 ];

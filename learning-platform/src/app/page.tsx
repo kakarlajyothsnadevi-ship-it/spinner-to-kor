@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Logo, ThemeToggle } from "@/components/brand";
 import { LinkButton, Badge } from "@/components/ui";
-import { categories, courses, plans } from "@/lib/data";
+import { categories, courses, freeIncludes } from "@/lib/data";
 import { CourseCard } from "@/components/course-card";
 
 const modes = [
@@ -28,7 +28,7 @@ export default function LandingPage() {
           <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
             <a href="#modes" className="hover:text-fg">How it works</a>
             <a href="#skills" className="hover:text-fg">Skills</a>
-            <a href="#pricing" className="hover:text-fg">Pricing</a>
+            <a href="#pricing" className="hover:text-fg">Free access</a>
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -138,35 +138,27 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Pricing — free for everyone */}
       <section id="pricing" className="border-t border-border bg-surface/40">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <h2 className="font-display text-2xl font-semibold text-fg sm:text-3xl">Simple, fair pricing</h2>
-          <p className="mt-2 text-muted">Start free. Upgrade when you're ready.</p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {plans.map((p) => (
-              <div
-                key={p.id}
-                className={`flex flex-col rounded-2xl border bg-surface p-5 shadow-card ${p.highlight ? "border-primary" : "border-border"}`}
-              >
-                {p.highlight && <Badge tone="primary" className="mb-2 self-start">Most popular</Badge>}
-                <h3 className="font-semibold text-fg">{p.name}</h3>
-                <p className="mt-1 text-2xl font-semibold text-fg">
-                  {p.price} <span className="text-sm font-normal text-muted">/ {p.cadence}</span>
-                </p>
-                <p className="mt-1 text-xs text-muted">{p.audience}</p>
-                <ul className="mt-4 flex-1 space-y-2 text-sm text-muted">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex gap-2">
-                      <span className="text-success" aria-hidden>✓</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <LinkButton href="/signup" variant={p.highlight ? "primary" : "outline"} className="mt-5" size="sm">
-                  Choose {p.name}
-                </LinkButton>
-              </div>
-            ))}
+        <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
+          <Badge tone="success" className="mb-4">100% free</Badge>
+          <h2 className="font-display text-2xl font-semibold text-fg sm:text-3xl">Free for everyone. No paywall.</h2>
+          <p className="mx-auto mt-2 max-w-xl text-muted">
+            Every course, every AI class, every feature — completely free, for learners of every age. No card, no trial that expires, no locked lessons.
+          </p>
+          <div className="mx-auto mt-8 max-w-xl rounded-2xl border border-border bg-surface p-6 text-left shadow-card">
+            <div className="flex items-baseline gap-2">
+              <span className="font-display text-3xl font-semibold text-fg">₹0</span>
+              <span className="text-muted">forever</span>
+            </div>
+            <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
+              {freeIncludes.map((f) => (
+                <li key={f} className="flex gap-2 text-sm text-fg">
+                  <span className="text-success" aria-hidden>✓</span> {f}
+                </li>
+              ))}
+            </ul>
+            <LinkButton href="/signup" className="mt-6 w-full" size="lg">Start learning — it's free</LinkButton>
           </div>
         </div>
       </section>

@@ -39,7 +39,7 @@ export default function ClassroomPage({ params }: { params: { courseId: string }
   const [camError, setCamError] = useState<string | null>(null);
   const [thinking, setThinking] = useState(false);
   const [aiMode, setAiMode] = useState<"live" | "offline" | null>(null);
-  const [fast, setFast] = useState(false);
+  const [fast, setFast] = useState(true); // default on for the fastest replies
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);

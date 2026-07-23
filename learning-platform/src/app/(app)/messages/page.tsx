@@ -5,6 +5,7 @@ import { getTutor, tutors } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import type { TutorPromptContext, TutorTurn } from "@/lib/tutor-api";
 
 type Msg = { from: "tutor" | "me"; text: string };
 
@@ -27,20 +28,61 @@ export default function MessagesPage() {
   const [activeId, setActiveId] = useState(tutors[0].id);
   const [threads, setThreads] = useState<Record<string, Msg[]>>(seed);
   const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
   const active = getTutor(activeId);
   const msgs = threads[activeId] ?? [];
 
-  function send() {
+  function appendTutor(id: string, text: string) {
+    setThreads((t) => ({ ...t, [id]: [...(t[id] ?? []), { from: "tutor", text }] }));
+  }
+
+  async function send() {
     const text = input.trim();
-    if (!text) return;
+    if (!text || sending) return;
+    const tutor = getTutor(activeId);
+    const priorMsgs = threads[activeId] ?? [];
     setThreads((t) => ({ ...t, [activeId]: [...(t[activeId] ?? []), { from: "me", text }] }));
     setInput("");
-    setTimeout(() => {
-      setThreads((t) => ({
-        ...t,
-        [activeId]: [...(t[activeId] ?? []), { from: "tutor", text: `Great question, ${user?.name ?? "there"} — I'll walk you through it in our next class. Keep it up!` }],
-      }));
-    }, 500);
+
+    const fallback = `Great question, ${user?.name ?? "there"} — I'll walk you through it in our next class. Keep it up!`;
+    const history: TutorTurn[] = [
+      ...priorMsgs.map((m) => ({ role: (m.from === "tutor" ? "assistant" : "user") as TutorTurn["role"], content: m.text })),
+      { role: "user", content: text },
+    ];
+    const context: TutorPromptContext = {
+      learnerName: user?.name ?? "there",
+      ageGroup: user?.ageGroup ?? "adult",
+      experience: user?.experience ?? "beginner",
+      personality: tutor?.personality ?? user?.preferredPersonality ?? "friendly",
+      language: user?.language ?? "en",
+      courseName: `${tutor?.name ?? "Your tutor"}'s mentoring`,
+      lessonTitle: "Open chat",
+      lessonObjective: "Help the learner with their questions and encourage them.",
+      stepTitle: "Conversation",
+      stepInstruction: "Answer the learner's questions helpfully, safely, and briefly.",
+      materials: [],
+      safety: [],
+    };
+
+    setSending(true);
+    try {
+      const res = await fetch("/api/tutor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history, context }),
+      });
+      const ct = res.headers.get("content-type") ?? "";
+      if (ct.includes("application/json") || !res.ok || !res.body) {
+        appendTutor(activeId, fallback);
+        return;
+      }
+      const reply = (await res.text()).trim();
+      appendTutor(activeId, reply || fallback);
+    } catch {
+      appendTutor(activeId, fallback);
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -88,10 +130,11 @@ export default function MessagesPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder={`Message ${active?.name}…`}
-              className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none"
+              placeholder={sending ? `${active?.name} is replying…` : `Message ${active?.name}…`}
+              disabled={sending}
+              className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none disabled:opacity-60"
             />
-            <button onClick={send} className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary/90">Send</button>
+            <button onClick={send} disabled={sending} className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary/90 disabled:opacity-50">Send</button>
           </div>
         </div>
       </Card>

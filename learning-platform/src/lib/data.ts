@@ -3,7 +3,6 @@ import type {
   Certificate,
   Course,
   Homework,
-  Plan,
   Quiz,
   SkillCategory,
   Tutor,
@@ -390,14 +389,14 @@ export const catalogTeasers: Pick<
   "id" | "categoryId" | "name" | "image" | "tutorId" | "ageGroups" | "difficulty" | "lessonCount" | "estimatedHours" | "materials" | "rating" | "ratingsCount" | "paid" | "price" | "summary"
 >[] = [
   { id: "teaser-draw", categoryId: "c-drawing", name: "Sketching from Shapes", image: "🖌️", tutorId: "t-maya", ageGroups: ["child", "teen", "adult"], difficulty: "beginner", lessonCount: 6, estimatedHours: 4, materials: ["Pencil", "Paper"], rating: 4.6, ratingsCount: 540, paid: false, summary: "Turn circles and boxes into confident drawings." },
-  { id: "teaser-bake", categoryId: "c-baking", name: "First-Time Cupcakes", image: "🧁", tutorId: "t-maya", ageGroups: ["teen", "adult", "senior"], difficulty: "beginner", lessonCount: 5, estimatedHours: 3, materials: ["Oven", "Basic pantry"], rating: 4.8, ratingsCount: 720, paid: true, price: 9, summary: "Bake and decorate fluffy cupcakes, safely." },
+  { id: "teaser-bake", categoryId: "c-baking", name: "First-Time Cupcakes", image: "🧁", tutorId: "t-maya", ageGroups: ["teen", "adult", "senior"], difficulty: "beginner", lessonCount: 5, estimatedHours: 3, materials: ["Oven", "Basic pantry"], rating: 4.8, ratingsCount: 720, paid: false, summary: "Bake and decorate fluffy cupcakes, safely." },
   { id: "teaser-photo", categoryId: "c-photo", name: "Phone Photography", image: "📷", tutorId: "t-kai", ageGroups: ["teen", "adult", "senior"], difficulty: "beginner", lessonCount: 7, estimatedHours: 4, materials: ["Any phone"], rating: 4.7, ratingsCount: 610, paid: false, summary: "Take striking photos with the camera in your pocket." },
-  { id: "teaser-music", categoryId: "c-music", name: "Make Your First Beat", image: "🎧", tutorId: "t-kai", ageGroups: ["teen", "adult"], difficulty: "intermediate", lessonCount: 8, estimatedHours: 6, materials: ["Free DAW"], rating: 4.5, ratingsCount: 430, paid: true, price: 14, summary: "Arrange drums and melody into a full loop." },
-  { id: "teaser-speak", categoryId: "c-speaking", name: "Confident Public Speaking", image: "🎤", tutorId: "t-kai", ageGroups: ["teen", "adult", "senior"], difficulty: "intermediate", lessonCount: 6, estimatedHours: 4, materials: ["A quiet room"], rating: 4.9, ratingsCount: 880, paid: true, price: 12, summary: "Structure a talk and deliver it with calm confidence." },
+  { id: "teaser-music", categoryId: "c-music", name: "Make Your First Beat", image: "🎧", tutorId: "t-kai", ageGroups: ["teen", "adult"], difficulty: "intermediate", lessonCount: 8, estimatedHours: 6, materials: ["Free DAW"], rating: 4.5, ratingsCount: 430, paid: false, summary: "Arrange drums and melody into a full loop." },
+  { id: "teaser-speak", categoryId: "c-speaking", name: "Confident Public Speaking", image: "🎤", tutorId: "t-kai", ageGroups: ["teen", "adult", "senior"], difficulty: "intermediate", lessonCount: 6, estimatedHours: 4, materials: ["A quiet room"], rating: 4.9, ratingsCount: 880, paid: false, summary: "Structure a talk and deliver it with calm confidence." },
 ];
 
 // ---------------------------------------------------------------------------
-// Homework, quizzes, badges, certificates, plans.
+// Homework, quizzes, badges, certificates, free-access benefits.
 // ---------------------------------------------------------------------------
 export const homeworks: Homework[] = [
   {
@@ -541,40 +540,17 @@ export const certificates: Certificate[] = [
   },
 ];
 
-export const plans: Plan[] = [
-  {
-    id: "free",
-    name: "Free",
-    price: "₹0",
-    cadence: "forever",
-    audience: "Curious beginners",
-    features: ["3 sample courses", "Trial AI classes", "Community tutorials", "Basic progress tracking"],
-  },
-  {
-    id: "monthly",
-    name: "Monthly",
-    price: "₹499",
-    cadence: "per month",
-    audience: "Regular learners",
-    highlight: true,
-    features: ["All courses", "Unlimited AI classes", "Homework reviews", "Certificates & badges", "Voice tutor"],
-  },
-  {
-    id: "annual",
-    name: "Annual",
-    price: "₹4,499",
-    cadence: "per year",
-    audience: "Committed learners",
-    features: ["Everything in Monthly", "2 months free", "Priority reviews", "Early access to new skills"],
-  },
-  {
-    id: "family",
-    name: "Family",
-    price: "₹899",
-    cadence: "per month",
-    audience: "Up to 5 members",
-    features: ["5 profiles", "Parent dashboard", "Children's safety controls", "Shared progress reports"],
-  },
+// SkillBloom is 100% free — no paywall, no payment. Everything below is
+// included for every learner at no cost.
+export const freeIncludes: string[] = [
+  "Every course and skill — nothing locked",
+  "Unlimited AI tutor classes",
+  "Homework reviews and feedback",
+  "Quizzes, projects, and guided practice",
+  "Certificates and badges",
+  "Voice tutor and step-by-step lessons",
+  "Family profiles with parental controls",
+  "Progress tracking and weekly summaries",
 ];
 
 // Convenience lookups -------------------------------------------------------

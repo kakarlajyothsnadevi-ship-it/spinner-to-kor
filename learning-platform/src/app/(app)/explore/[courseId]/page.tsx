@@ -51,7 +51,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
             <div>
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <Badge tone="neutral">{category?.name}</Badge>
-                <Badge tone={course.paid ? "accent" : "success"}>{course.paid ? `₹${(course.price ?? 0) * 80}` : "Free"}</Badge>
+                <Badge tone="success">Free</Badge>
                 <Badge tone="neutral"><span className="capitalize">{course.difficulty}</span></Badge>
               </div>
               <h1 className="font-display text-3xl font-semibold text-fg">{course.name}</h1>
@@ -130,7 +130,7 @@ export default function CourseDetailsPage({ params }: { params: Promise<{ course
                   size="lg"
                   onClick={() => enroll(course.id)}
                 >
-                  {course.paid ? `Enrol · ₹${(course.price ?? 0) * 80}` : "Start course — free"}
+                  Start course — free
                 </Button>
               )}
               {enrolled && <p className="text-center text-xs text-success">✓ You're enrolled</p>}

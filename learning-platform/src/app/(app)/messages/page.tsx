@@ -76,8 +76,28 @@ export default function MessagesPage() {
         appendTutor(activeId, fallback);
         return;
       }
-      const reply = (await res.text()).trim();
-      appendTutor(activeId, reply || fallback);
+      // Stream tokens into a live tutor bubble as they arrive.
+      appendTutor(activeId, "");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let acc = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        acc += decoder.decode(value, { stream: true });
+        setThreads((t) => {
+          const arr = [...(t[activeId] ?? [])];
+          if (arr.length) arr[arr.length - 1] = { from: "tutor", text: acc };
+          return { ...t, [activeId]: arr };
+        });
+      }
+      if (!acc.trim()) {
+        setThreads((t) => {
+          const arr = [...(t[activeId] ?? [])];
+          if (arr.length) arr[arr.length - 1] = { from: "tutor", text: fallback };
+          return { ...t, [activeId]: arr };
+        });
+      }
     } catch {
       appendTutor(activeId, fallback);
     } finally {

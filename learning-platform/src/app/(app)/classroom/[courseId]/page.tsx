@@ -1,10 +1,10 @@
 "use client";
 
-import { use, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
-import { getCourse, getTutor } from "@/lib/data";
+import { getCategory, getCourse, getTutor } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { Badge, Button, Card, CardBody, Progress, SafetyNote } from "@/components/ui";
 import {
@@ -15,14 +15,14 @@ import {
   IconMicOff,
   IconVolume,
 } from "@/components/icons";
-import { isSpeechSupported, speak, stopSpeaking } from "@/lib/tts";
+import { isSpeechSupported, primeVoices, speak, stopSpeaking } from "@/lib/tts";
 import { greeting, tutorReply } from "@/lib/tutor-brain";
 import type { TutorPromptContext, TutorTurn } from "@/lib/tutor-api";
 
 type ChatMsg = { id: number; from: "tutor" | "learner"; text: string };
 
-export default function ClassroomPage({ params }: { params: Promise<{ courseId: string }> }) {
-  const { courseId } = use(params);
+export default function ClassroomPage({ params }: { params: { courseId: string } }) {
+  const { courseId } = params;
   const router = useRouter();
   const course = getCourse(courseId);
   const { user, enrollments, completeLesson, enroll } = useStore();
@@ -39,7 +39,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
   const [camError, setCamError] = useState<string | null>(null);
   const [thinking, setThinking] = useState(false);
   const [aiMode, setAiMode] = useState<"live" | "offline" | null>(null);
-  const [fast, setFast] = useState(false);
+  const [fast, setFast] = useState(true); // default on for the fastest replies
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
@@ -65,8 +65,14 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
     setMessages((m) => [...m, { id: msgId.current, from: "tutor", text }]);
     if (doSpeak) {
       setSpeaking(true);
-      speak(text, { rate, onEnd: () => setSpeaking(false) });
+      speak(text, { rate, lang: user?.language, onEnd: () => setSpeaking(false) });
     }
+  }
+  // Tap-to-hear any tutor message (a user gesture, so speech is always allowed).
+  function hearMessage(text: string) {
+    primeVoices();
+    setSpeaking(true);
+    speak(text, { rate, lang: user?.language, onEnd: () => setSpeaking(false) });
   }
   function pushLearner(text: string) {
     msgId.current += 1;
@@ -142,6 +148,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
   async function send() {
     const text = input.trim();
     if (!text || thinking) return;
+    primeVoices(); // unlock speech on this user gesture
     pushLearner(text);
     setInput("");
 
@@ -157,6 +164,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
       experience: user?.experience ?? "beginner",
       personality,
       language: user?.language ?? "en",
+      skill: getCategory(course!.categoryId)?.name ?? course!.name,
       courseName: course!.name,
       lessonTitle: lesson!.title,
       lessonObjective: lesson!.objective,
@@ -224,17 +232,21 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
   }
 
   function repeatThat() {
+    primeVoices();
     pushTutor(step!.tutorScript);
   }
   function showAgain() {
+    primeVoices();
     pushTutor(`Look here — ${step!.reference?.caption ?? step!.instruction}. Watch closely and try it with me.`);
   }
   function slowDown() {
+    primeVoices();
     const nr = Math.max(0.6, rate - 0.2);
     setRate(nr);
     pushTutor(`No problem, ${learnerName}. I'll slow down. ${step!.instruction}`);
   }
   function askQuestion() {
+    primeVoices();
     pushTutor(`Here's a question for you: can you tell me what we're doing in "${step!.title}", and why it matters?`, true);
   }
 
@@ -400,7 +412,7 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
             </div>
             <div ref={chatRef} className="max-h-72 min-h-[12rem] flex-1 space-y-2 overflow-y-auto p-3 scroll-slim">
               {messages.map((m) => (
-                <div key={m.id} className={`flex ${m.from === "learner" ? "justify-end" : "justify-start"}`}>
+                <div key={m.id} className={`flex items-end gap-1 ${m.from === "learner" ? "justify-end" : "justify-start"}`}>
                   <div
                     className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
                       m.from === "learner" ? "bg-primary text-primary-fg" : "bg-surface-2 text-fg"
@@ -408,6 +420,16 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
                   >
                     {m.text}
                   </div>
+                  {m.from === "tutor" && m.text && isSpeechSupported() && (
+                    <button
+                      onClick={() => hearMessage(m.text)}
+                      className="shrink-0 rounded-full p-1 text-muted hover:bg-surface-2 hover:text-primary"
+                      aria-label="Hear this message"
+                      title="Hear this"
+                    >
+                      <IconVolume width={15} height={15} />
+                    </button>
+                  )}
                 </div>
               ))}
               {thinking && (

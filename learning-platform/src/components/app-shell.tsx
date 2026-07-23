@@ -26,6 +26,7 @@ import {
   IconQuiz,
   IconSettings,
   IconSubscription,
+  IconTutorials,
 } from "./icons";
 import type { Role } from "@/lib/types";
 
@@ -34,6 +35,7 @@ type NavItem = { href: string; label: string; icon: ComponentType<SVGProps<SVGSV
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: IconHome, roles: ["learner"] },
   { href: "/explore", label: "Explore Skills", icon: IconExplore, roles: ["learner"] },
+  { href: "/tutorials", label: "Tutorial Library", icon: IconTutorials, roles: ["learner"] },
   { href: "/classes", label: "My Classes", icon: IconClasses, roles: ["learner"] },
   { href: "/practice", label: "Guided Practice", icon: IconProjects, roles: ["learner"] },
   { href: "/projects", label: "My Projects", icon: IconProjects, roles: ["learner"] },

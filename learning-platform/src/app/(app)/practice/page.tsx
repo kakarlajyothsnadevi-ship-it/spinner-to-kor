@@ -11,25 +11,62 @@ export default function PracticePage() {
   const { user } = useStore();
   const [courseId, setCourseId] = useState(courses[0].id);
   const [preview, setPreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [feedback, setFeedback] = useState<null | { well: string; improve: string; safety: string; next: string }>(null);
   const [analysing, setAnalysing] = useState(false);
+  const [aiReviewed, setAiReviewed] = useState(false);
   const course = courses.find((c) => c.id === courseId)!;
   const cue = practiceCues[courseId] ?? "Try the step, then show me your result when you're ready.";
 
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImageFile(file);
     setPreview(URL.createObjectURL(file));
     setFeedback(null);
   }
 
-  function analyse() {
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(",")[1] ?? "");
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function analyse() {
     setAnalysing(true);
     setFeedback(null);
-    setTimeout(() => {
+    setAiReviewed(false);
+    try {
+      if (imageFile) {
+        const imageBase64 = await fileToBase64(imageFile);
+        const res = await fetch("/api/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageBase64,
+            mediaType: imageFile.type,
+            courseName: course.name,
+            cue,
+            safety: course.lessons[0].safety,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.feedback) {
+          setAiReviewed(true);
+          setFeedback(data.feedback);
+          return;
+        }
+      }
+      // No key configured, no image, or error → sample feedback.
+      setFeedback(feedbackByCourse[courseId] ?? genericFeedback);
+    } catch {
+      setFeedback(feedbackByCourse[courseId] ?? genericFeedback);
+    } finally {
       setAnalysing(false);
-      setFeedback(feedbackByCourse[courseId]);
-    }, 1400);
+    }
   }
 
   return (
@@ -96,6 +133,10 @@ export default function PracticePage() {
 
             {feedback && (
               <div className="space-y-3 rounded-xl border border-border bg-surface-2/50 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-fg">Tutor feedback</span>
+                  <Badge tone={aiReviewed ? "success" : "neutral"}>{aiReviewed ? "✦ AI reviewed your photo" : "Sample feedback"}</Badge>
+                </div>
                 <FeedbackRow tone="success" label="What went well" text={feedback.well} />
                 <FeedbackRow tone="warning" label="What to improve" text={feedback.improve} />
                 <FeedbackRow tone="danger" label="Safety & technique" text={feedback.safety} />
@@ -119,9 +160,21 @@ function FeedbackRow({ tone, label, text }: { tone: "success" | "warning" | "dan
 }
 
 const practiceCues: Record<string, string> = {
-  "course-makeup-101": "apply your base on one cheek first, then show me your nails— I mean your cheek — when you're ready.",
+  "course-makeup-101": "apply your base on one cheek first, then show me the result when you're ready.",
   "course-nail-101": "apply the base coat first. Show me your nails when you are ready.",
   "course-coding-101": "write one heading and one paragraph in HTML, then upload a screenshot of your page.",
+  "course-drawing-101": "block in your object with simple shapes, then show me your light sketch.",
+  "course-baking-101": "set up your station safely and show me your measured ingredients.",
+  "course-photo-101": "take one photo using the grid with your subject on a line, then upload it.",
+  "course-music-101": "program a kick-and-snare pattern, then share a short clip.",
+  "course-speaking-101": "write your one main message and three points, then show me your outline.",
+};
+
+const genericFeedback = {
+  well: "Nice work — you clearly followed the steps and gave it a real try.",
+  improve: "Take your time on the trickiest part and repeat it once more to build consistency.",
+  safety: "Keep following the lesson's safety notes and work at a comfortable, unhurried pace.",
+  next: "You're ready to move on to the next step of the lesson.",
 };
 
 const feedbackByCourse: Record<string, { well: string; improve: string; safety: string; next: string }> = {

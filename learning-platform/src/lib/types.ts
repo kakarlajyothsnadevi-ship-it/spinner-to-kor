@@ -165,6 +165,24 @@ export interface Badge {
   earned: boolean;
 }
 
+export interface TutorialStep {
+  title: string;
+  narration: string;
+  visual: string; // emoji illustration for the step
+}
+
+export interface Tutorial {
+  id: string;
+  title: string;
+  categoryId: string;
+  difficulty: Difficulty;
+  durationMin: number;
+  ageGroups: AgeGroup[];
+  summary: string;
+  image: string;
+  steps: TutorialStep[];
+}
+
 export interface Plan {
   id: string;
   name: string;

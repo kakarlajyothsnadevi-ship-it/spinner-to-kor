@@ -171,6 +171,13 @@ export const IconUpload = (p: SVGProps<SVGSVGElement>) => (
     <path d="M12 16V4M8 8l4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
   </svg>
 );
+export const IconTutorials = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="3" y="5" width="18" height="12" rx="2" />
+    <path d="M10 9v4l4-2Z" />
+    <path d="M8 21h8" />
+  </svg>
+);
 export const IconVolume = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
     <path d="M4 9v6h4l5 4V5L8 9Z" />

@@ -10,7 +10,18 @@ step by step, reviews their work, and adapts to their age, experience, and safet
 > Every mock has a clear seam where a real service (LLM, TTS, database, auth, payments)
 > plugs in.
 
-## Quick start
+## Deploy (get a live link)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kakarlajyothsnadevi-ship-it/spinner-to-kor&root-directory=learning-platform&project-name=skillbloom&env=ANTHROPIC_API_KEY)
+
+Click the button, sign in with GitHub, and Vercel deploys the app (root directory is
+pre-set to `learning-platform`). You'll get a public URL like `https://skillbloom.vercel.app`.
+
+- `ANTHROPIC_API_KEY` is **optional** — add it to enable the live AI tutor, or leave it blank
+  to run free in demo mode (the built-in offline tutor).
+- The app is a standard Next.js app, so it also deploys to Netlify, Render, or any Node host.
+
+## Quick start (local)
 
 ```bash
 npm install

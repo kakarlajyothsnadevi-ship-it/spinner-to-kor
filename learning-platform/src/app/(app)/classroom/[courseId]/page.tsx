@@ -15,7 +15,7 @@ import {
   IconMicOff,
   IconVolume,
 } from "@/components/icons";
-import { isSpeechSupported, speak, stopSpeaking } from "@/lib/tts";
+import { isSpeechSupported, primeVoices, speak, stopSpeaking } from "@/lib/tts";
 import { greeting, tutorReply } from "@/lib/tutor-brain";
 import type { TutorPromptContext, TutorTurn } from "@/lib/tutor-api";
 
@@ -65,8 +65,14 @@ export default function ClassroomPage({ params }: { params: { courseId: string }
     setMessages((m) => [...m, { id: msgId.current, from: "tutor", text }]);
     if (doSpeak) {
       setSpeaking(true);
-      speak(text, { rate, onEnd: () => setSpeaking(false) });
+      speak(text, { rate, lang: user?.language, onEnd: () => setSpeaking(false) });
     }
+  }
+  // Tap-to-hear any tutor message (a user gesture, so speech is always allowed).
+  function hearMessage(text: string) {
+    primeVoices();
+    setSpeaking(true);
+    speak(text, { rate, lang: user?.language, onEnd: () => setSpeaking(false) });
   }
   function pushLearner(text: string) {
     msgId.current += 1;
@@ -142,6 +148,7 @@ export default function ClassroomPage({ params }: { params: { courseId: string }
   async function send() {
     const text = input.trim();
     if (!text || thinking) return;
+    primeVoices(); // unlock speech on this user gesture
     pushLearner(text);
     setInput("");
 
@@ -224,17 +231,21 @@ export default function ClassroomPage({ params }: { params: { courseId: string }
   }
 
   function repeatThat() {
+    primeVoices();
     pushTutor(step!.tutorScript);
   }
   function showAgain() {
+    primeVoices();
     pushTutor(`Look here — ${step!.reference?.caption ?? step!.instruction}. Watch closely and try it with me.`);
   }
   function slowDown() {
+    primeVoices();
     const nr = Math.max(0.6, rate - 0.2);
     setRate(nr);
     pushTutor(`No problem, ${learnerName}. I'll slow down. ${step!.instruction}`);
   }
   function askQuestion() {
+    primeVoices();
     pushTutor(`Here's a question for you: can you tell me what we're doing in "${step!.title}", and why it matters?`, true);
   }
 
@@ -400,7 +411,7 @@ export default function ClassroomPage({ params }: { params: { courseId: string }
             </div>
             <div ref={chatRef} className="max-h-72 min-h-[12rem] flex-1 space-y-2 overflow-y-auto p-3 scroll-slim">
               {messages.map((m) => (
-                <div key={m.id} className={`flex ${m.from === "learner" ? "justify-end" : "justify-start"}`}>
+                <div key={m.id} className={`flex items-end gap-1 ${m.from === "learner" ? "justify-end" : "justify-start"}`}>
                   <div
                     className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
                       m.from === "learner" ? "bg-primary text-primary-fg" : "bg-surface-2 text-fg"
@@ -408,6 +419,16 @@ export default function ClassroomPage({ params }: { params: { courseId: string }
                   >
                     {m.text}
                   </div>
+                  {m.from === "tutor" && m.text && isSpeechSupported() && (
+                    <button
+                      onClick={() => hearMessage(m.text)}
+                      className="shrink-0 rounded-full p-1 text-muted hover:bg-surface-2 hover:text-primary"
+                      aria-label="Hear this message"
+                      title="Hear this"
+                    >
+                      <IconVolume width={15} height={15} />
+                    </button>
+                  )}
                 </div>
               ))}
               {thinking && (

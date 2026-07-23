@@ -553,6 +553,108 @@ export const freeIncludes: string[] = [
   "Progress tracking and weekly summaries",
 ];
 
+// ---------------------------------------------------------------------------
+// Tutorial Library — short, interactive step-through tutorials with narration.
+// ---------------------------------------------------------------------------
+export const tutorials: import("./types").Tutorial[] = [
+  {
+    id: "tut-nail-dots",
+    title: "Neat Polka-Dot Nails in 4 Steps",
+    categoryId: "c-nail",
+    difficulty: "beginner",
+    durationMin: 4,
+    ageGroups: ["teen", "adult", "senior"],
+    summary: "A quick, tidy polka-dot design from base coat to shine.",
+    image: "💅",
+    steps: [
+      { title: "Prep & base coat", narration: "Start clean. File in one direction, then paint a thin base coat to protect your nail.", visual: "🧾" },
+      { title: "Two thin colour coats", narration: "Add colour in thin layers — middle stroke first, then each side. Let each coat dry.", visual: "💗" },
+      { title: "Dot the pattern", narration: "Dip a dotting tool and press gently for round, even dots. Re-dip between each one.", visual: "⚪" },
+      { title: "Seal with top coat", narration: "Finish with a glossy top coat to seal the design and make it last.", visual: "✨" },
+    ],
+  },
+  {
+    id: "tut-makeup-base",
+    title: "A Natural Everyday Base",
+    categoryId: "c-makeup",
+    difficulty: "beginner",
+    durationMin: 3,
+    ageGroups: ["teen", "adult", "senior"],
+    summary: "Prep, base, and a soft finish for a fresh everyday look.",
+    image: "💄",
+    steps: [
+      { title: "Cleanse & moisturise", narration: "Clean skin first, then a little moisturiser so everything glides on smoothly.", visual: "🧴" },
+      { title: "Dot and blend base", narration: "Small dots on forehead, cheeks, nose and chin, then bounce a damp sponge to blend.", visual: "🫧" },
+      { title: "Add a hint of blush", narration: "Smile and sweep blush on the apples of your cheeks for a fresh flush.", visual: "🌸" },
+      { title: "Finish with mascara", narration: "Wiggle mascara root to tip on your top lashes. One coat is plenty for daytime.", visual: "👁️" },
+    ],
+  },
+  {
+    id: "tut-code-heading",
+    title: "Your First Web Heading",
+    categoryId: "c-coding",
+    difficulty: "beginner",
+    durationMin: 3,
+    ageGroups: ["child", "teen", "adult", "senior"],
+    summary: "Write and style your first HTML heading.",
+    image: "💻",
+    steps: [
+      { title: "Tags come in pairs", narration: "HTML uses tags. Most have an opening tag and a closing tag with a slash. Content sits between them.", visual: "🏷️" },
+      { title: "Write a heading", narration: "Type h1 with your title inside. Save and refresh — you just made a web page!", visual: "🔠" },
+      { title: "Add a style block", narration: "In the head, add a style block to change colours, fonts and spacing.", visual: "🎨" },
+      { title: "Centre and colour it", narration: "Give your h1 a colour and text-align center. Beautiful — that's HTML and CSS!", visual: "🌈" },
+    ],
+  },
+  {
+    id: "tut-draw-shapes",
+    title: "Draw Anything from Simple Shapes",
+    categoryId: "c-drawing",
+    difficulty: "beginner",
+    durationMin: 3,
+    ageGroups: ["child", "teen", "adult"],
+    summary: "Turn circles and boxes into confident sketches.",
+    image: "🖌️",
+    steps: [
+      { title: "Start with shapes", narration: "Every object hides simple shapes. Block in circles and boxes lightly first.", visual: "⭕" },
+      { title: "Connect the forms", narration: "Join your shapes with gentle guide lines to find the outline.", visual: "✏️" },
+      { title: "Refine the outline", narration: "Press a little harder to draw the real edges over your guides.", visual: "📐" },
+      { title: "Add light shading", narration: "Shade one side softly to give your drawing depth.", visual: "🌗" },
+    ],
+  },
+  {
+    id: "tut-bake-cupcakes",
+    title: "Fluffy Cupcakes, Step by Step",
+    categoryId: "c-baking",
+    difficulty: "beginner",
+    durationMin: 5,
+    ageGroups: ["teen", "adult", "senior"],
+    summary: "Mix, bake, and decorate — with kitchen safety first.",
+    image: "🧁",
+    steps: [
+      { title: "Safety & setup", narration: "Wash hands, tie back hair, and ask an adult before using the oven. Preheat it safely.", visual: "🧼" },
+      { title: "Mix the batter", narration: "Cream butter and sugar, add eggs, then fold in flour gently — don't overmix.", visual: "🥣" },
+      { title: "Bake with care", narration: "Fill liners two-thirds full. Use oven mitts. Bake until a toothpick comes out clean.", visual: "🔥" },
+      { title: "Cool then decorate", narration: "Let them cool fully, then pipe frosting and add toppings. Enjoy!", visual: "🎨" },
+    ],
+  },
+  {
+    id: "tut-speak-confident",
+    title: "Speak with Calm Confidence",
+    categoryId: "c-speaking",
+    difficulty: "intermediate",
+    durationMin: 4,
+    ageGroups: ["teen", "adult", "senior"],
+    summary: "Structure a short talk and deliver it steadily.",
+    image: "🎤",
+    steps: [
+      { title: "Breathe and ground", narration: "Take a slow breath. Plant your feet. A calm body makes a calm voice.", visual: "🌬️" },
+      { title: "Open with one idea", narration: "Start with a single clear sentence about what you'll share.", visual: "💡" },
+      { title: "Three simple points", narration: "Give three short points. Pause between each so your listener keeps up.", visual: "3️⃣" },
+      { title: "Close and smile", narration: "End by repeating your main idea, then smile. You did it!", visual: "😊" },
+    ],
+  },
+];
+
 // Convenience lookups -------------------------------------------------------
 export const getCourse = (id: string) => courses.find((c) => c.id === id);
 export const getTutor = (id: string) => tutors.find((t) => t.id === id);

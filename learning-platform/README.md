@@ -21,6 +21,28 @@ npm run dev
 On the login page use **Learner / Parent / Admin** demo buttons to jump straight into each role,
 or sign up to walk through onboarding.
 
+## Enabling the real AI tutor (optional)
+
+The Live AI Classroom chat can be powered by a real Claude model. It runs **server-side**
+through a Next.js API route (`src/app/api/tutor/route.ts`), so the API key is never exposed
+to the browser.
+
+```bash
+cp .env.example .env.local
+# then set ANTHROPIC_API_KEY=... in .env.local
+npm run dev
+```
+
+- **With a key:** the classroom chat calls the Anthropic API (`claude-opus-4-8`). The tutor
+  answers in character (using the learner's chosen personality, age group, experience, and
+  language), stays on the current lesson/step, and is held to the platform's safety rules
+  (no medical claims; age-appropriate; folds in allergy/hygiene/heat/tool safety). A green
+  **✦ AI live** badge appears on the chat.
+- **Without a key:** everything still works — the chat falls back to the built-in offline
+  tutor (`src/lib/tutor-brain.ts`) and shows a **Demo mode** badge. The API route returns
+  `{ configured: false }` and the client degrades gracefully. The same fallback covers rate
+  limits and network errors.
+
 ## Tech stack
 
 | Area | Choice |
@@ -28,6 +50,7 @@ or sign up to walk through onboarding.
 | Framework | Next.js 14 (App Router) + TypeScript |
 | Styling | Tailwind CSS with CSS-variable design tokens (light + dark) |
 | State | React Context + `localStorage` (mock persistence) |
+| AI tutor | Anthropic `@anthropic-ai/sdk` (`claude-opus-4-8`) via a server API route, with offline fallback |
 | Voice | Browser Web Speech API (graceful fallback to text) |
 | Camera | `getUserMedia` with permission handling + fallback |
 | DB (planned) | PostgreSQL + Prisma (`prisma/schema.prisma`) |
@@ -102,7 +125,7 @@ prisma/schema.prisma          intended PostgreSQL schema
 
 ## Connecting real services (next steps)
 
-- **AI chat**: replace `src/lib/tutor-brain.ts` with a call to an AI endpoint (same interface).
+- **AI chat**: ✅ done — the classroom calls a real Claude model via `src/app/api/tutor/route.ts` when `ANTHROPIC_API_KEY` is set, with `src/lib/tutor-brain.ts` as the offline fallback. Extend the same pattern to Guided Practice feedback and the Messages page next.
 - **Auth + DB**: swap `src/lib/store.tsx` mock for Prisma + a secure auth provider.
 - **TTS/avatar/video**: `src/lib/tts.ts` already uses Web Speech; swap for a hosted voice/avatar service.
 - **Payments**: wire the subscription page to a payment provider.

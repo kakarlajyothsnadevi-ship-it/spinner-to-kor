@@ -17,6 +17,7 @@ import {
 } from "@/components/icons";
 import { isSpeechSupported, speak, stopSpeaking } from "@/lib/tts";
 import { greeting, tutorReply } from "@/lib/tutor-brain";
+import type { TutorPromptContext, TutorTurn } from "@/lib/tutor-api";
 
 type ChatMsg = { id: number; from: "tutor" | "learner"; text: string };
 
@@ -36,6 +37,8 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
   const [camOn, setCamOn] = useState(false);
   const [micOn, setMicOn] = useState(false);
   const [camError, setCamError] = useState<string | null>(null);
+  const [thinking, setThinking] = useState(false);
+  const [aiMode, setAiMode] = useState<"live" | "offline" | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
@@ -118,15 +121,60 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
   const isLastStep = stepIndex === totalSteps - 1;
   const isLastLesson = lessonIndex === course.lessons.length - 1;
 
-  function send() {
+  function offlineReply(text: string) {
+    pushTutor(tutorReply(text, { lesson: lesson!, step: step!, personality, learnerName, seed: msgId.current }));
+  }
+
+  async function send() {
     const text = input.trim();
-    if (!text) return;
+    if (!text || thinking) return;
     pushLearner(text);
     setInput("");
-    setTimeout(() => {
-      const reply = tutorReply(text, { lesson: lesson!, step: step!, personality, learnerName, seed: msgId.current });
-      pushTutor(reply);
-    }, 400);
+
+    // Build the conversation history in the API's role format (tutor→assistant,
+    // learner→user), then append the new learner turn.
+    const history: TutorTurn[] = [
+      ...messages.map((m) => ({ role: (m.from === "tutor" ? "assistant" : "user") as TutorTurn["role"], content: m.text })),
+      { role: "user", content: text },
+    ];
+    const context: TutorPromptContext = {
+      learnerName,
+      ageGroup: user?.ageGroup ?? "adult",
+      experience: user?.experience ?? "beginner",
+      personality,
+      language: user?.language ?? "en",
+      courseName: course!.name,
+      lessonTitle: lesson!.title,
+      lessonObjective: lesson!.objective,
+      stepTitle: step!.title,
+      stepInstruction: step!.instruction,
+      stepTip: step!.tip,
+      materials: lesson!.materials,
+      safety: lesson!.safety,
+    };
+
+    setThinking(true);
+    try {
+      const res = await fetch("/api/tutor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history, context }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.reply) {
+        setAiMode("live");
+        pushTutor(data.reply);
+      } else {
+        // Key not configured, rate-limited, or error → offline tutor.
+        setAiMode("offline");
+        offlineReply(text);
+      }
+    } catch {
+      setAiMode("offline");
+      offlineReply(text);
+    } finally {
+      setThinking(false);
+    }
   }
 
   function repeatThat() {
@@ -283,7 +331,14 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
 
           {/* Chat */}
           <Card className="flex flex-col">
-            <div className="border-b border-border px-4 py-2.5 text-sm font-medium text-fg">Chat with {tutor?.name}</div>
+            <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+              <span className="text-sm font-medium text-fg">Chat with {tutor?.name}</span>
+              {aiMode === "live" ? (
+                <Badge tone="success">✦ AI live</Badge>
+              ) : aiMode === "offline" ? (
+                <Badge tone="neutral">Demo mode</Badge>
+              ) : null}
+            </div>
             <div ref={chatRef} className="max-h-72 min-h-[12rem] flex-1 space-y-2 overflow-y-auto p-3 scroll-slim">
               {messages.map((m) => (
                 <div key={m.id} className={`flex ${m.from === "learner" ? "justify-end" : "justify-start"}`}>
@@ -296,17 +351,28 @@ export default function ClassroomPage({ params }: { params: Promise<{ courseId: 
                   </div>
                 </div>
               ))}
+              {thinking && (
+                <div className="flex justify-start" aria-live="polite">
+                  <div className="flex items-center gap-1 rounded-2xl bg-surface-2 px-3 py-2.5">
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted [animation-delay:-0.2s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted [animation-delay:-0.1s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted" />
+                    <span className="sr-only">{tutor?.name} is typing</span>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2 border-t border-border p-2">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send()}
-                placeholder={micOn ? "Listening… (type your answer)" : "Type a message or question…"}
-                className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none"
+                placeholder={thinking ? `${tutor?.name} is thinking…` : micOn ? "Listening… (type your answer)" : "Type a message or question…"}
+                disabled={thinking}
+                className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none disabled:opacity-60"
                 aria-label="Message your tutor"
               />
-              <Button size="sm" onClick={send}>Send</Button>
+              <Button size="sm" onClick={send} disabled={thinking}>Send</Button>
             </div>
           </Card>
 
